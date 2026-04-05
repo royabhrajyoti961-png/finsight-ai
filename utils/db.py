@@ -7,7 +7,6 @@ def create_tables():
     conn = connect()
     c = conn.cursor()
 
-    # Users table
     c.execute("""
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -16,7 +15,6 @@ def create_tables():
     )
     """)
 
-    # Transactions with user_id
     c.execute("""
     CREATE TABLE IF NOT EXISTS transactions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,7 +29,6 @@ def create_tables():
     conn.commit()
     conn.close()
 
-# AUTH
 def register(username, password):
     conn = connect()
     c = conn.cursor()
@@ -47,7 +44,6 @@ def login(username, password):
     conn.close()
     return data
 
-# TRANSACTIONS
 def add_transaction(user_id, amount, category, note, date):
     conn = connect()
     c = conn.cursor()
