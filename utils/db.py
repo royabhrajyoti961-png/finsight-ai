@@ -7,8 +7,12 @@ def create_tables():
     conn = connect()
     c = conn.cursor()
 
+    # 🔥 Force fresh schema (IMPORTANT)
+    c.execute("DROP TABLE IF EXISTS users")
+    c.execute("DROP TABLE IF EXISTS transactions")
+
     c.execute("""
-    CREATE TABLE IF NOT EXISTS users (
+    CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE,
         password TEXT
@@ -16,7 +20,7 @@ def create_tables():
     """)
 
     c.execute("""
-    CREATE TABLE IF NOT EXISTS transactions (
+    CREATE TABLE transactions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER,
         amount REAL,
