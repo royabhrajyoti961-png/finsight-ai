@@ -10,7 +10,7 @@ def create_tables():
     c.execute("""
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT,
+        username TEXT UNIQUE,
         password TEXT
     )
     """)
@@ -32,9 +32,14 @@ def create_tables():
 def register(username, password):
     conn = connect()
     c = conn.cursor()
-    c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
-    conn.commit()
-    conn.close()
+    try:
+        c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
+        conn.commit()
+        return True
+    except:
+        return False
+    finally:
+        conn.close()
 
 def login(username, password):
     conn = connect()
@@ -43,28 +48,3 @@ def login(username, password):
     data = c.fetchone()
     conn.close()
     return data
-
-def add_transaction(user_id, amount, category, note, date):
-    conn = connect()
-    c = conn.cursor()
-    c.execute(
-        "INSERT INTO transactions (user_id, amount, category, note, date) VALUES (?, ?, ?, ?, ?)",
-        (user_id, amount, category, note, date)
-    )
-    conn.commit()
-    conn.close()
-
-def get_transactions(user_id):
-    conn = connect()
-    c = conn.cursor()
-    c.execute("SELECT * FROM transactions WHERE user_id=?", (user_id,))
-    data = c.fetchall()
-    conn.close()
-    return data
-
-def delete_transaction(id):
-    conn = connect()
-    c = conn.cursor()
-    c.execute("DELETE FROM transactions WHERE id=?", (id,))
-    conn.commit()
-    conn.close()
