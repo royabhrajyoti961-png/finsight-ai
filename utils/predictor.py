@@ -6,13 +6,14 @@ def predict_spending(df):
     if len(df) < 5:
         return None
 
-    df['date'] = pd.to_datetime(df['date'])
-    df = df.sort_values('date')
+    df = df.copy()
+    df['Date'] = pd.to_datetime(df['Date'])
+    df = df.sort_values('Date')
 
     df['day'] = np.arange(len(df))
 
     X = df[['day']]
-    y = df['amount']
+    y = df['Amount']
 
     model = LinearRegression()
     model.fit(X, y)
