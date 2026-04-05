@@ -4,198 +4,115 @@ import plotly.express as px
 from utils.db import *
 from utils.predictor import predict_spending
 
-# ================= CONFIG =================
 st.set_page_config(page_title="FinSight AI", layout="wide")
-create_table()
+create_tables()
 
-# ================= 🌈 LIGHT PREMIUM CSS =================
+# ================= UI =================
 st.markdown("""
 <style>
-
-/* 🌈 BACKGROUND */
 .stApp {
     background: linear-gradient(135deg, #f0f9ff, #e0f2fe, #fdf2f8);
-    color: #0f172a;
-    font-family: 'Segoe UI', sans-serif;
 }
-
-/* HEADER */
-.header {
-    font-size: 32px;
-    font-weight: bold;
-    color: #1e293b;
-}
-
-/* KPI CARDS */
 .kpi {
-    background: rgba(255,255,255,0.75);
+    background: rgba(255,255,255,0.7);
     padding: 20px;
     border-radius: 20px;
-    backdrop-filter: blur(10px);
-    text-align: center;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-    transition: 0.3s;
 }
-
-.kpi:hover {
-    transform: translateY(-5px);
-}
-
-/* CARD */
 .card {
     background: rgba(255,255,255,0.8);
     padding: 20px;
     border-radius: 20px;
-    backdrop-filter: blur(12px);
-    margin-top: 10px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
 }
-
-/* BUTTON */
 .stButton>button {
-    background: linear-gradient(90deg, #3b82f6, #22c55e);
+    background: linear-gradient(90deg,#3b82f6,#22c55e);
     color: white;
-    font-weight: bold;
-    border-radius: 12px;
-    padding: 12px;
-    border: none;
 }
-
-/* SIDEBAR */
-section[data-testid="stSidebar"] {
-    background: #ffffff;
-}
-
-/* TABLE */
-[data-testid="stDataFrame"] {
-    border-radius: 15px;
-}
-
-/* METRIC */
-[data-testid="metric-container"] {
-    background: rgba(255,255,255,0.6);
-    padding: 15px;
-    border-radius: 15px;
-}
-
 </style>
 """, unsafe_allow_html=True)
 
-# ================= TITLE =================
-st.markdown('<div class="header">💰 FinSight AI Dashboard</div>', unsafe_allow_html=True)
+st.title("💰 FinSight AI")
 
-# ================= NAV =================
-menu = st.sidebar.radio("Navigation", ["🏠 Dashboard", "➕ Add Expense", "📜 Transactions"])
+# ================= LOGIN =================
+if "user" not in st.session_state:
+    st.session_state.user = None
 
-# ================= DATA =================
-data = get_transactions()
-df = pd.DataFrame(data, columns=["ID", "Amount", "Category", "Note", "Date"])
+if st.session_state.user is None:
+    menu = st.radio("Login / Register", ["Login", "Register"])
 
-# ================= DASHBOARD =================
-if menu == "🏠 Dashboard":
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
 
-    if not df.empty:
-        df["Date"] = pd.to_datetime(df["Date"])
+    if menu == "Register":
+        if st.button("Register"):
+            register(username, password)
+            st.success("Registered! Now login")
 
-        total = df["Amount"].sum()
-        avg = df["Amount"].mean()
-        max_spend = df["Amount"].max()
+    if menu == "Login":
+        if st.button("Login"):
+            user = login(username, password)
+            if user:
+                st.session_state.user = user
+                st.rerun()
+            else:
+                st.error("Invalid credentials")
 
-        # KPI ROW
-        c1, c2, c3 = st.columns(3)
+# ================= MAIN APP =================
+else:
+    user_id = st.session_state.user[0]
 
-        c1.markdown(f'<div class="kpi"><h4>Total Spend</h4><h2>₹ {total:.2f}</h2></div>', unsafe_allow_html=True)
-        c2.markdown(f'<div class="kpi"><h4>Avg Spend</h4><h2>₹ {avg:.2f}</h2></div>', unsafe_allow_html=True)
-        c3.markdown(f'<div class="kpi"><h4>Max Expense</h4><h2>₹ {max_spend:.2f}</h2></div>', unsafe_allow_html=True)
+    menu = st.sidebar.radio("Menu", ["Dashboard", "Add", "Transactions", "AI Chat"])
 
-        st.markdown("---")
+    data = get_transactions(user_id)
+    df = pd.DataFrame(data, columns=["ID","User","Amount","Category","Note","Date"])
 
-        # CHART + INSIGHTS
-        col1, col2 = st.columns([2,1])
+    # ===== DASHBOARD =====
+    if menu == "Dashboard":
+        if not df.empty:
+            total = df["Amount"].sum()
+            avg = df["Amount"].mean()
 
-        with col1:
-            st.subheader("📊 Financial Analytics")
+            c1,c2 = st.columns(2)
+            c1.markdown(f'<div class="kpi">Total ₹ {total}</div>', unsafe_allow_html=True)
+            c2.markdown(f'<div class="kpi">Avg ₹ {avg}</div>', unsafe_allow_html=True)
 
-            fig = px.pie(
-                df,
-                names="Category",
-                values="Amount",
-                hole=0.6,
-                color_discrete_sequence=px.colors.qualitative.Set3
-            )
-            st.plotly_chart(fig, use_container_width=True)
+            fig = px.pie(df, names="Category", values="Amount")
+            st.plotly_chart(fig)
 
             trend = df.groupby("Date")["Amount"].sum().reset_index()
+            fig2 = px.line(trend, x="Date", y="Amount")
+            st.plotly_chart(fig2)
 
-            fig2 = px.line(
-                trend,
-                x="Date",
-                y="Amount",
-                markers=True,
-                color_discrete_sequence=["#3b82f6"]
-            )
-            st.plotly_chart(fig2, use_container_width=True)
+            pred = predict_spending(df)
+            if pred:
+                st.markdown(f'<div class="card">Predicted Spend ₹ {pred}</div>', unsafe_allow_html=True)
 
-        with col2:
-            st.subheader("🤖 AI Insights")
-
-            prediction = predict_spending(df)
-
-            if prediction:
-                st.markdown(f"""
-                <div class="card">
-                    <h4>📈 Future Prediction</h4>
-                    <p>Expected spend: <b>₹ {prediction}</b></p>
-                </div>
-                """, unsafe_allow_html=True)
-
-                if prediction > total:
-                    st.error("🚨 Overspending Risk")
-
-            # Smart Insight
-            if "Food" in df["Category"].values:
-                food = df[df["Category"]=="Food"]["Amount"].sum()
-                if food > total * 0.4:
-                    st.warning("🍔 High food spending detected")
-
-    else:
-        st.info("No transactions yet")
-
-# ================= ADD =================
-elif menu == "➕ Add Expense":
-
-    st.subheader("Add New Expense")
-
-    col1, col2 = st.columns(2)
-
-    with col1:
+    # ===== ADD =====
+    elif menu == "Add":
         amount = st.number_input("Amount", min_value=1.0)
-        category = st.selectbox("Category", ["Food", "Travel", "Shopping", "Bills", "Other"])
-
-    with col2:
+        category = st.selectbox("Category", ["Food","Travel","Shopping","Bills","Other"])
         note = st.text_input("Note")
         date = st.date_input("Date")
 
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    if st.button("🚀 Add Expense", use_container_width=True):
-        add_transaction(amount, category, note, str(date))
-        st.success("Added Successfully!")
-        st.rerun()
-
-# ================= TRANSACTIONS =================
-elif menu == "📜 Transactions":
-
-    st.subheader("Transaction History")
-
-    if not df.empty:
-        st.dataframe(df, use_container_width=True)
-
-        delete_id = st.number_input("Enter ID to delete", min_value=1)
-
-        if st.button("Delete", use_container_width=True):
-            delete_transaction(delete_id)
-            st.warning("Deleted")
+        if st.button("Add Expense"):
+            add_transaction(user_id, amount, category, note, str(date))
+            st.success("Added!")
             st.rerun()
-    else:
-        st.info("No data")
+
+    # ===== TRANSACTIONS =====
+    elif menu == "Transactions":
+        st.dataframe(df)
+
+    # ===== AI CHAT =====
+    elif menu == "AI Chat":
+        st.subheader("🤖 Ask about your spending")
+
+        query = st.text_input("Ask something")
+
+        if query:
+            if "total" in query.lower():
+                st.write(f"You spent ₹ {df['Amount'].sum()}")
+            elif "food" in query.lower():
+                food = df[df["Category"]=="Food"]["Amount"].sum()
+                st.write(f"You spent ₹ {food} on food")
+            else:
+                st.write("Try asking about total or food spending")
