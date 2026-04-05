@@ -20,7 +20,7 @@ html, body, [class*="css"] {
 /* Background */
 .stApp {
     background: linear-gradient(135deg, #020617, #0f172a);
-    color: light-pink ;
+    color: white;
 }
 
 /* HEADER */
