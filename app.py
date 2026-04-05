@@ -1,140 +1,129 @@
 import streamlit as st
-import pandas as pd
-import plotly.express as px
 from utils.db import *
-from utils.predictor import predict_spending
-from openai import OpenAI
 
-# ================= CONFIG =================
-st.set_page_config(page_title="FinSight AI", layout="wide")
+st.set_page_config(page_title="FinSight AI", layout="centered")
 create_tables()
 
-# ================= API =================
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-
-# ================= UI =================
+# 🌈 PREMIUM LIGHT TEXTURED BACKGROUND
 st.markdown("""
 <style>
+
+/* 🌈 Background */
 .stApp {
-    background: linear-gradient(135deg, #f0f9ff, #e0f2fe, #fdf2f8);
+    background: linear-gradient(135deg, #fef9c3, #dbeafe, #fbcfe8, #dcfce7);
+    background-size: 400% 400%;
+    animation: gradientBG 10s ease infinite;
 }
-.kpi {
-    background: rgba(255,255,255,0.7);
-    padding: 20px;
-    border-radius: 20px;
+
+/* Gradient animation */
+@keyframes gradientBG {
+    0% {background-position: 0% 50%;}
+    50% {background-position: 100% 50%;}
+    100% {background-position: 0% 50%;}
 }
+
+/* Glass Card */
 .card {
-    background: rgba(255,255,255,0.8);
-    padding: 20px;
-    border-radius: 20px;
+    background: rgba(255,255,255,0.75);
+    padding: 40px;
+    border-radius: 25px;
+    backdrop-filter: blur(15px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.1);
 }
+
+/* Heading */
+.title {
+    font-size: 32px;
+    font-weight: bold;
+    text-align: center;
+    color: #1e293b;
+}
+
+/* Input fields */
+input {
+    border-radius: 12px !important;
+}
+
+/* Buttons */
 .stButton>button {
-    background: linear-gradient(90deg,#3b82f6,#22c55e);
+    background: linear-gradient(90deg,#3b82f6,#22c55e,#a855f7);
     color: white;
+    border-radius: 12px;
+    padding: 12px;
+    font-weight: bold;
+    border: none;
 }
+
+/* Center box */
+.container {
+    display: flex;
+    justify-content: center;
+    margin-top: 80px;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
-st.title("💰 FinSight AI")
-
-# ================= LOGIN =================
+# SESSION
 if "user" not in st.session_state:
     st.session_state.user = None
 
+# ================= LOGIN / REGISTER UI =================
 if st.session_state.user is None:
-    menu = st.radio("Login / Register", ["Login", "Register"])
 
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
+    st.markdown('<div class="container">', unsafe_allow_html=True)
 
-    if menu == "Register":
-        if st.button("Register"):
-            register(username, password)
-            st.success("Registered!")
+    col1, col2 = st.columns([1,1])
 
-    if menu == "Login":
+    with col1:
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+
+        st.markdown('<div class="title">🔐 Login</div>', unsafe_allow_html=True)
+
+        login_user = st.text_input("Username", key="login_user")
+        login_pass = st.text_input("Password", type="password", key="login_pass")
+
         if st.button("Login"):
-            user = login(username, password)
+            user = login(login_user, login_pass)
             if user:
                 st.session_state.user = user
+                st.success("Login Successful")
                 st.rerun()
             else:
-                st.error("Invalid credentials")
+                st.error("Invalid Credentials")
 
-# ================= MAIN =================
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with col2:
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+
+        st.markdown('<div class="title">📝 Register</div>', unsafe_allow_html=True)
+
+        reg_user = st.text_input("Create Username", key="reg_user")
+        reg_pass = st.text_input("Create Password", type="password", key="reg_pass")
+
+        if st.button("Register"):
+            success = register(reg_user, reg_pass)
+            if success:
+                st.success("Account Created!")
+            else:
+                st.warning("Username already exists")
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# ================= AFTER LOGIN =================
 else:
-    user_id = st.session_state.user[0]
+    st.success(f"Welcome {st.session_state.user[1]} 🎉")
 
-    menu = st.sidebar.radio("Menu", ["Dashboard", "Add", "Transactions", "AI Chat"])
+    if st.button("Logout"):
+        st.session_state.user = None
+        st.rerun()
 
-    data = get_transactions(user_id)
-    df = pd.DataFrame(data, columns=["ID","User","Amount","Category","Note","Date"])
-
-    # ===== DASHBOARD =====
-    if menu == "Dashboard":
-        if not df.empty:
-            total = df["Amount"].sum()
-            avg = df["Amount"].mean()
-
-            c1, c2 = st.columns(2)
-            c1.markdown(f'<div class="kpi">Total ₹ {total}</div>', unsafe_allow_html=True)
-            c2.markdown(f'<div class="kpi">Avg ₹ {avg}</div>', unsafe_allow_html=True)
-
-            fig = px.pie(df, names="Category", values="Amount")
-            st.plotly_chart(fig)
-
-            trend = df.groupby("Date")["Amount"].sum().reset_index()
-            fig2 = px.line(trend, x="Date", y="Amount")
-            st.plotly_chart(fig2)
-
-            pred = predict_spending(df)
-            if pred:
-                st.markdown(f'<div class="card">Predicted Spend ₹ {pred}</div>', unsafe_allow_html=True)
-
-    # ===== ADD =====
-    elif menu == "Add":
-        amount = st.number_input("Amount", min_value=1.0)
-        category = st.selectbox("Category", ["Food","Travel","Shopping","Bills","Other"])
-        note = st.text_input("Note")
-        date = st.date_input("Date")
-
-        if st.button("Add Expense"):
-            add_transaction(user_id, amount, category, note, str(date))
-            st.success("Added!")
-            st.rerun()
-
-    # ===== TRANSACTIONS =====
-    elif menu == "Transactions":
-        st.dataframe(df)
-
-    # ===== 🤖 AI CHAT =====
-    elif menu == "AI Chat":
-        st.subheader("🤖 Smart Financial Assistant")
-
-        query = st.text_input("Ask anything about your spending")
-
-        if query and not df.empty:
-            summary = df.groupby("Category")["Amount"].sum().to_dict()
-            total = df["Amount"].sum()
-
-            prompt = f"""
-            User financial data:
-            Total spending: {total}
-            Category breakdown: {summary}
-
-            User question: {query}
-
-            Answer like a smart financial advisor with insights and suggestions.
-            """
-
-            try:
-                response = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[{"role": "user", "content": prompt}]
-                )
-
-                answer = response.choices[0].message.content
-                st.markdown(f'<div class="card">{answer}</div>', unsafe_allow_html=True)
-
-            except Exception as e:
-                st.error("Error connecting to AI")
+    st.markdown("""
+    <div class="card">
+        <h3>🚀 Dashboard Coming Next</h3>
+        <p>You have successfully logged in.</p>
+    </div>
+    """, unsafe_allow_html=True)
