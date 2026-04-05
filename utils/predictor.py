@@ -18,7 +18,7 @@ def predict_spending(df):
     model = LinearRegression()
     model.fit(X, y)
 
-    future_day = [[len(df) + 5]]
-    prediction = model.predict(future_day)
+    future = [[len(df) + 5]]
+    prediction = model.predict(future)
 
     return round(prediction[0], 2)
