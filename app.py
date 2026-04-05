@@ -1,93 +1,47 @@
 import streamlit as st
+import pandas as pd
+import plotly.express as px
 from utils.db import *
+from utils.predictor import predict_spending
 
-st.set_page_config(page_title="FinSight AI", layout="centered")
+st.set_page_config(page_title="FinSight AI", layout="wide")
 create_tables()
 
-# 🌈 ULTRA PREMIUM CSS (ANIMATED BG + BUTTONS)
+# 🌈 UI
 st.markdown("""
 <style>
-
-/* 🌈 BACKGROUND */
 .stApp {
     background: linear-gradient(135deg, #fef9c3, #dbeafe, #fbcfe8, #dcfce7);
     background-size: 400% 400%;
-    animation: gradientBG 12s ease infinite;
+    animation: bg 10s ease infinite;
 }
-
-/* 🌈 ANIMATION */
-@keyframes gradientBG {
-    0% {background-position: 0% 50%;}
-    50% {background-position: 100% 50%;}
-    100% {background-position: 0% 50%;}
+@keyframes bg {
+    0% {background-position:0%}
+    50% {background-position:100%}
+    100% {background-position:0%}
 }
-
-/* 💎 GLASS CARD */
 .card {
-    background: rgba(255,255,255,0.75);
-    padding: 40px;
-    border-radius: 25px;
-    backdrop-filter: blur(15px);
-    box-shadow: 0 15px 40px rgba(0,0,0,0.1);
-    transition: 0.3s;
+    background: rgba(255,255,255,0.8);
+    padding: 20px;
+    border-radius: 20px;
 }
-
-/* ✨ HOVER CARD */
-.card:hover {
-    transform: translateY(-5px);
+.kpi {
+    background: rgba(255,255,255,0.7);
+    padding: 15px;
+    border-radius: 15px;
 }
-
-/* 🔐 TITLE */
-.title {
-    font-size: 30px;
-    font-weight: bold;
-    text-align: center;
-    color: #1e293b;
-}
-
-/* 🧾 INPUT */
-input {
-    border-radius: 12px !important;
-}
-
-/* 🚀 DYNAMIC BUTTON */
 .stButton>button {
-    background: linear-gradient(270deg, #3b82f6, #22c55e, #a855f7, #ec4899);
-    background-size: 600% 600%;
-    animation: buttonGradient 8s ease infinite;
-    color: white;
-    font-weight: bold;
-    border-radius: 12px;
-    padding: 12px;
-    border: none;
-    transition: 0.3s;
+    background: linear-gradient(270deg,#3b82f6,#22c55e,#a855f7,#ec4899);
+    background-size:600% 600%;
+    animation: btn 6s ease infinite;
+    color:white;
+    border-radius:12px;
 }
-
-/* ✨ BUTTON ANIMATION */
-@keyframes buttonGradient {
-    0% {background-position: 0% 50%;}
-    50% {background-position: 100% 50%;}
-    100% {background-position: 0% 50%;}
+@keyframes btn {
+    0%{background-position:0%}
+    50%{background-position:100%}
+    100%{background-position:0%}
 }
-
-/* 🌟 BUTTON HOVER */
-.stButton>button:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 20px rgba(168,85,247,0.5);
-}
-
-/* 📦 CENTER */
-.container {
-    display: flex;
-    justify-content: center;
-    margin-top: 80px;
-}
-
-/* SIDEBAR LIGHT */
-section[data-testid="stSidebar"] {
-    background: #ffffff;
-}
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -95,64 +49,86 @@ section[data-testid="stSidebar"] {
 if "user" not in st.session_state:
     st.session_state.user = None
 
-# ================= LOGIN / REGISTER =================
+# ================= LOGIN =================
 if st.session_state.user is None:
+    st.title("🔐 FinSight AI Login")
 
-    st.markdown('<div class="container">', unsafe_allow_html=True)
+    col1,col2 = st.columns(2)
 
-    col1, col2 = st.columns(2)
-
-    # LOGIN
     with col1:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-
-        st.markdown('<div class="title">🔐 Login</div>', unsafe_allow_html=True)
-
-        login_user = st.text_input("Username", key="login_user")
-        login_pass = st.text_input("Password", type="password", key="login_pass")
-
+        st.subheader("Login")
+        u = st.text_input("Username")
+        p = st.text_input("Password", type="password")
         if st.button("Login"):
-            user = login(login_user, login_pass)
+            user = login(u,p)
             if user:
                 st.session_state.user = user
-                st.success("Login Successful 🎉")
                 st.rerun()
             else:
-                st.error("Invalid Credentials")
+                st.error("Invalid")
 
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    # REGISTER
     with col2:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-
-        st.markdown('<div class="title">📝 Register</div>', unsafe_allow_html=True)
-
-        reg_user = st.text_input("Create Username", key="reg_user")
-        reg_pass = st.text_input("Create Password", type="password", key="reg_pass")
-
+        st.subheader("Register")
+        ru = st.text_input("New Username")
+        rp = st.text_input("New Password", type="password")
         if st.button("Register"):
-            success = register(reg_user, reg_pass)
-            if success:
-                st.success("Account Created 🚀")
+            if register(ru,rp):
+                st.success("Registered!")
             else:
-                st.warning("Username already exists")
+                st.warning("User exists")
 
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# ================= AFTER LOGIN =================
+# ================= APP =================
 else:
-    st.success(f"Welcome {st.session_state.user[1]} 🎉")
+    user_id = st.session_state.user[0]
+
+    menu = st.sidebar.radio("Menu", ["Dashboard","Add","Transactions"])
+
+    data = get_transactions(user_id)
+    df = pd.DataFrame(data, columns=["ID","User","Amount","Category","Note","Date"])
+
+    # DASHBOARD
+    if menu == "Dashboard":
+        if not df.empty:
+            total = df["Amount"].sum()
+            avg = df["Amount"].mean()
+
+            c1,c2 = st.columns(2)
+            c1.markdown(f'<div class="kpi">Total ₹ {total}</div>', unsafe_allow_html=True)
+            c2.markdown(f'<div class="kpi">Avg ₹ {avg}</div>', unsafe_allow_html=True)
+
+            fig = px.pie(df, names="Category", values="Amount")
+            st.plotly_chart(fig)
+
+            trend = df.groupby("Date")["Amount"].sum().reset_index()
+            fig2 = px.line(trend, x="Date", y="Amount")
+            st.plotly_chart(fig2)
+
+            pred = predict_spending(df)
+            if pred:
+                st.markdown(f'<div class="card">Predicted ₹ {pred}</div>', unsafe_allow_html=True)
+
+    # ADD
+    elif menu == "Add":
+        amt = st.number_input("Amount", min_value=1.0)
+        cat = st.selectbox("Category", ["Food","Travel","Shopping","Bills","Other"])
+        note = st.text_input("Note")
+        date = st.date_input("Date")
+
+        if st.button("Add"):
+            add_transaction(user_id, amt, cat, note, str(date))
+            st.success("Added")
+            st.rerun()
+
+    # VIEW
+    elif menu == "Transactions":
+        st.dataframe(df)
+
+        did = st.number_input("Delete ID", min_value=1)
+        if st.button("Delete"):
+            delete_transaction(did)
+            st.warning("Deleted")
+            st.rerun()
 
     if st.button("Logout"):
         st.session_state.user = None
         st.rerun()
-
-    st.markdown("""
-    <div class="card">
-        <h3>🚀 Dashboard Ready</h3>
-        <p>This UI is now hackathon-level premium.</p>
-    </div>
-    """, unsafe_allow_html=True)
