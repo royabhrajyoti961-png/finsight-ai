@@ -3,9 +3,14 @@ import pandas as pd
 import plotly.express as px
 from utils.db import *
 from utils.predictor import predict_spending
+from openai import OpenAI
 
+# ================= CONFIG =================
 st.set_page_config(page_title="FinSight AI", layout="wide")
 create_tables()
+
+# ================= API =================
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # ================= UI =================
 st.markdown("""
@@ -45,7 +50,7 @@ if st.session_state.user is None:
     if menu == "Register":
         if st.button("Register"):
             register(username, password)
-            st.success("Registered! Now login")
+            st.success("Registered!")
 
     if menu == "Login":
         if st.button("Login"):
@@ -56,7 +61,7 @@ if st.session_state.user is None:
             else:
                 st.error("Invalid credentials")
 
-# ================= MAIN APP =================
+# ================= MAIN =================
 else:
     user_id = st.session_state.user[0]
 
@@ -71,7 +76,7 @@ else:
             total = df["Amount"].sum()
             avg = df["Amount"].mean()
 
-            c1,c2 = st.columns(2)
+            c1, c2 = st.columns(2)
             c1.markdown(f'<div class="kpi">Total ₹ {total}</div>', unsafe_allow_html=True)
             c2.markdown(f'<div class="kpi">Avg ₹ {avg}</div>', unsafe_allow_html=True)
 
@@ -102,17 +107,34 @@ else:
     elif menu == "Transactions":
         st.dataframe(df)
 
-    # ===== AI CHAT =====
+    # ===== 🤖 AI CHAT =====
     elif menu == "AI Chat":
-        st.subheader("🤖 Ask about your spending")
+        st.subheader("🤖 Smart Financial Assistant")
 
-        query = st.text_input("Ask something")
+        query = st.text_input("Ask anything about your spending")
 
-        if query:
-            if "total" in query.lower():
-                st.write(f"You spent ₹ {df['Amount'].sum()}")
-            elif "food" in query.lower():
-                food = df[df["Category"]=="Food"]["Amount"].sum()
-                st.write(f"You spent ₹ {food} on food")
-            else:
-                st.write("Try asking about total or food spending")
+        if query and not df.empty:
+            summary = df.groupby("Category")["Amount"].sum().to_dict()
+            total = df["Amount"].sum()
+
+            prompt = f"""
+            User financial data:
+            Total spending: {total}
+            Category breakdown: {summary}
+
+            User question: {query}
+
+            Answer like a smart financial advisor with insights and suggestions.
+            """
+
+            try:
+                response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[{"role": "user", "content": prompt}]
+                )
+
+                answer = response.choices[0].message.content
+                st.markdown(f'<div class="card">{answer}</div>', unsafe_allow_html=True)
+
+            except Exception as e:
+                st.error("Error connecting to AI")
