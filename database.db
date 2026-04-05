@@ -1,7 +1,0 @@
-| Column   | Type    |
-| -------- | ------- |
-| id       | INTEGER |
-| amount   | REAL    |
-| category | TEXT    |
-| note     | TEXT    |
-| date     | TEXT    |
