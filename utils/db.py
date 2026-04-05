@@ -3,49 +3,72 @@ import sqlite3
 def connect():
     return sqlite3.connect("database.db", check_same_thread=False)
 
-def create_table():
+def create_tables():
     conn = connect()
     c = conn.cursor()
 
+    # Users table
     c.execute("""
-        CREATE TABLE IF NOT EXISTS transactions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            amount REAL,
-            category TEXT,
-            note TEXT,
-            date TEXT
-        )
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT,
+        password TEXT
+    )
+    """)
+
+    # Transactions with user_id
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        amount REAL,
+        category TEXT,
+        note TEXT,
+        date TEXT
+    )
     """)
 
     conn.commit()
     conn.close()
 
-def add_transaction(amount, category, note, date):
+# AUTH
+def register(username, password):
     conn = connect()
     c = conn.cursor()
-
-    c.execute(
-        "INSERT INTO transactions (amount, category, note, date) VALUES (?, ?, ?, ?)",
-        (amount, category, note, date)
-    )
-
+    c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
     conn.commit()
     conn.close()
 
-def get_transactions():
+def login(username, password):
     conn = connect()
     c = conn.cursor()
+    c.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
+    data = c.fetchone()
+    conn.close()
+    return data
 
-    c.execute("SELECT * FROM transactions")
+# TRANSACTIONS
+def add_transaction(user_id, amount, category, note, date):
+    conn = connect()
+    c = conn.cursor()
+    c.execute(
+        "INSERT INTO transactions (user_id, amount, category, note, date) VALUES (?, ?, ?, ?, ?)",
+        (user_id, amount, category, note, date)
+    )
+    conn.commit()
+    conn.close()
+
+def get_transactions(user_id):
+    conn = connect()
+    c = conn.cursor()
+    c.execute("SELECT * FROM transactions WHERE user_id=?", (user_id,))
     data = c.fetchall()
-
     conn.close()
     return data
 
 def delete_transaction(id):
     conn = connect()
     c = conn.cursor()
-
     c.execute("DELETE FROM transactions WHERE id=?", (id,))
     conn.commit()
     conn.close()
