@@ -48,3 +48,28 @@ def login(username, password):
     data = c.fetchone()
     conn.close()
     return data
+
+def add_transaction(user_id, amount, category, note, date):
+    conn = connect()
+    c = conn.cursor()
+    c.execute(
+        "INSERT INTO transactions (user_id, amount, category, note, date) VALUES (?, ?, ?, ?, ?)",
+        (user_id, amount, category, note, date)
+    )
+    conn.commit()
+    conn.close()
+
+def get_transactions(user_id):
+    conn = connect()
+    c = conn.cursor()
+    c.execute("SELECT * FROM transactions WHERE user_id=?", (user_id,))
+    data = c.fetchall()
+    conn.close()
+    return data
+
+def delete_transaction(id):
+    conn = connect()
+    c = conn.cursor()
+    c.execute("DELETE FROM transactions WHERE id=?", (id,))
+    conn.commit()
+    conn.close()
