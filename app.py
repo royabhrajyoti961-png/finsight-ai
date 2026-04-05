@@ -8,56 +8,53 @@ from utils.predictor import predict_spending
 st.set_page_config(page_title="FinSight AI", layout="wide")
 create_table()
 
-# ================= ULTRA PREMIUM CSS =================
+# ================= 🌈 LIGHT PREMIUM CSS =================
 st.markdown("""
 <style>
 
-/* GLOBAL */
-html, body, [class*="css"] {
-    font-family: 'Segoe UI', sans-serif;
-}
-
-/* Background */
+/* 🌈 BACKGROUND */
 .stApp {
-    background: linear-gradient(135deg, #020617, #0f172a);
-    color: white;
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe, #fdf2f8);
+    color: #0f172a;
+    font-family: 'Segoe UI', sans-serif;
 }
 
 /* HEADER */
 .header {
-    font-size: 28px;
+    font-size: 32px;
     font-weight: bold;
-    padding: 10px 0;
+    color: #1e293b;
 }
 
 /* KPI CARDS */
 .kpi {
-    background: rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.75);
     padding: 20px;
-    border-radius: 18px;
-    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
     text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
     transition: 0.3s;
 }
 
 .kpi:hover {
     transform: translateY(-5px);
-    box-shadow: 0 0 20px rgba(34,197,94,0.4);
 }
 
-/* GLASS CARD */
+/* CARD */
 .card {
-    background: rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.8);
     padding: 20px;
-    border-radius: 18px;
-    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    backdrop-filter: blur(12px);
     margin-top: 10px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
 }
 
 /* BUTTON */
 .stButton>button {
-    background: linear-gradient(90deg,#22c55e,#4ade80);
-    color: black;
+    background: linear-gradient(90deg, #3b82f6, #22c55e);
+    color: white;
     font-weight: bold;
     border-radius: 12px;
     padding: 12px;
@@ -66,13 +63,19 @@ html, body, [class*="css"] {
 
 /* SIDEBAR */
 section[data-testid="stSidebar"] {
-    background: #020617;
+    background: #ffffff;
 }
 
 /* TABLE */
 [data-testid="stDataFrame"] {
     border-radius: 15px;
-    overflow: hidden;
+}
+
+/* METRIC */
+[data-testid="metric-container"] {
+    background: rgba(255,255,255,0.6);
+    padding: 15px;
+    border-radius: 15px;
 }
 
 </style>
@@ -107,18 +110,31 @@ if menu == "🏠 Dashboard":
 
         st.markdown("---")
 
-        # CHARTS + INSIGHTS LAYOUT
+        # CHART + INSIGHTS
         col1, col2 = st.columns([2,1])
 
         with col1:
             st.subheader("📊 Financial Analytics")
 
-            chart1 = px.pie(df, names="Category", values="Amount", hole=0.6)
-            st.plotly_chart(chart1, use_container_width=True)
+            fig = px.pie(
+                df,
+                names="Category",
+                values="Amount",
+                hole=0.6,
+                color_discrete_sequence=px.colors.qualitative.Set3
+            )
+            st.plotly_chart(fig, use_container_width=True)
 
             trend = df.groupby("Date")["Amount"].sum().reset_index()
-            chart2 = px.line(trend, x="Date", y="Amount", markers=True)
-            st.plotly_chart(chart2, use_container_width=True)
+
+            fig2 = px.line(
+                trend,
+                x="Date",
+                y="Amount",
+                markers=True,
+                color_discrete_sequence=["#3b82f6"]
+            )
+            st.plotly_chart(fig2, use_container_width=True)
 
         with col2:
             st.subheader("🤖 AI Insights")
@@ -128,19 +144,19 @@ if menu == "🏠 Dashboard":
             if prediction:
                 st.markdown(f"""
                 <div class="card">
-                    <h4>Future Prediction</h4>
-                    <p>₹ {prediction}</p>
+                    <h4>📈 Future Prediction</h4>
+                    <p>Expected spend: <b>₹ {prediction}</b></p>
                 </div>
                 """, unsafe_allow_html=True)
 
                 if prediction > total:
                     st.error("🚨 Overspending Risk")
 
-            # Smart insight
+            # Smart Insight
             if "Food" in df["Category"].values:
                 food = df[df["Category"]=="Food"]["Amount"].sum()
                 if food > total * 0.4:
-                    st.warning("🍔 High food spending")
+                    st.warning("🍔 High food spending detected")
 
     else:
         st.info("No transactions yet")
@@ -164,7 +180,7 @@ elif menu == "➕ Add Expense":
 
     if st.button("🚀 Add Expense", use_container_width=True):
         add_transaction(amount, category, note, str(date))
-        st.success("Added!")
+        st.success("Added Successfully!")
         st.rerun()
 
 # ================= TRANSACTIONS =================
