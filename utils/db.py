@@ -36,7 +36,8 @@ def register_user(username, password):
         c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
         conn.commit()
         return True
-    except:
+    except Exception as e:
+        print("REGISTER ERROR:", e)
         return False
     finally:
         conn.close()
