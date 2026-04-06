@@ -6,7 +6,9 @@ from utils.predictor import predict_future, generate_insights
 from utils.ai_advisor import generate_ai_advice
 
 # ================= CONFIG =================
-st.set_page_config(page_title="FinSight SaaS", layout="wide")
+st.set_page_config(page_title="FinSight SaaS", layout="wide"
+    page_icon=":material/keyboard_double_arrow_right:" # Ensure colons are present
+)
 create_tables()
 
 # ================= THEME SYSTEM =================
@@ -105,7 +107,7 @@ if "user" not in st.session_state:
 # ================= AUTH =================
 if st.session_state.user is None:
 
-    st.markdown("<h2 class='fade'>💼 FinSight SaaS</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 class='fade'> FinSight SaaS</h2>", unsafe_allow_html=True)
 
     tab1, tab2 = st.tabs(["Login", "Register"])
 
@@ -136,16 +138,16 @@ if st.session_state.user is None:
 else:
     user_id = st.session_state.user[0]
 
-    # 🌗 Theme Toggle
-    st.sidebar.button("🌗 Toggle Theme", on_click=toggle_theme)
+    #  Theme Toggle
+    st.sidebar.button(" Toggle Theme", on_click=toggle_theme)
 
     st.sidebar.title("Navigation")
-    menu = st.sidebar.radio("", ["Dashboard", "Add Expense", "Transactions", "AI Advisor"])
+    menu = st.sidebar.radio("", [" Dashboard", "Add Expense", "Transactions", "AI Advisor"])
 
     data = get_expenses(user_id)
     df = pd.DataFrame(data, columns=["ID","User","Amount","Category","Note","Date"])
 
-    st.markdown("<h2 class='fade'>📊 Dashboard</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 class='fade'> Dashboard</h2>", unsafe_allow_html=True)
 
     # ================= DASHBOARD =================
     if menu == "Dashboard":
