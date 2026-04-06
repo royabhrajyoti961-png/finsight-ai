@@ -160,7 +160,7 @@ else:
     data = get_expenses(user_id)
     df = pd.DataFrame(data, columns=["ID","User","Amount","Category","Note","Date"])
 
-    st.markdown("<h2 class='fade'> ₹ Dashboard</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 class='fade'>  Dashboard</h2>", unsafe_allow_html=True)
 
     # ================= DASHBOARD =================
     if menu == "$ Dashboard":
