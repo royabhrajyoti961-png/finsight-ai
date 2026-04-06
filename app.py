@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -9,86 +8,68 @@ from utils.predictor import predict_future, generate_insights
 st.set_page_config(page_title="FinSight AI", layout="wide")
 create_tables()
 
-# ================= 🍎 APPLE UI =================
+# ================= PREMIUM UI =================
 st.markdown("""
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
 
-/* 🍎 FONT */
+/* 🔥 Force Poppins */
 * {
     font-family: 'Poppins', sans-serif !important;
 }
 
-/* 🌈 SOFT BACKGROUND */
+/* 🌈 Animated Background */
 .stApp {
-    background: linear-gradient(135deg, #f9fafb, #eef2ff, #fdf2f8);
+    background: linear-gradient(135deg, #fdfbfb, #ebedee, #e0f2fe, #fce7f3);
+    background-size: 300% 300%;
+    animation: gradientMove 12s ease infinite;
 }
 
-/* 💎 GLASS CARD */
+@keyframes gradientMove {
+    0% {background-position: 0% 50%;}
+    50% {background-position: 100% 50%;}
+    100% {background-position: 0% 50%;}
+}
+
+/* 💎 Card */
 .card {
-    background: rgba(255,255,255,0.6);
-    backdrop-filter: blur(20px);
-    border-radius: 20px;
+    background: rgba(255,255,255,0.75);
+    backdrop-filter: blur(12px);
     padding: 25px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.05);
-    transition: all 0.3s ease;
-}
-
-/* ✨ CARD HOVER */
-.card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 40px rgba(0,0,0,0.08);
-}
-
-/* 🧊 KPI TEXT */
-.kpi-title {
-    font-size: 14px;
-    color: #6b7280;
-}
-
-.kpi-value {
-    font-size: 26px;
-    font-weight: 600;
-}
-
-/* 🔘 BUTTON */
-.stButton>button {
-    background: rgba(255,255,255,0.6);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    border: 1px solid #e5e7eb;
-    padding: 10px 16px;
-    color: #111827;
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
     transition: 0.3s;
 }
 
-/* ✨ BUTTON HOVER */
-.stButton>button:hover {
-    background: #111827;
+.card:hover {
+    transform: translateY(-5px);
+}
+
+/* KPI */
+.kpi {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+/* 🚀 Button */
+.stButton>button {
+    background: linear-gradient(135deg, #6366f1, #3b82f6, #06b6d4);
     color: white;
-    transform: scale(1.04);
+    border-radius: 12px;
+    padding: 10px;
+    font-weight: 500;
+    border: none;
 }
 
-/* 📦 SIDEBAR */
+.stButton>button:hover {
+    transform: scale(1.05);
+}
+
+/* Sidebar */
 section[data-testid="stSidebar"] {
-    background: rgba(255,255,255,0.7);
-    backdrop-filter: blur(20px);
-}
-
-/* ✏️ INPUT */
-input {
-    border-radius: 10px !important;
-}
-
-/* 📊 FADE ANIMATION */
-.fade {
-    animation: fadeIn 0.8s ease-in-out;
-}
-
-@keyframes fadeIn {
-    from {opacity: 0;}
-    to {opacity: 1;}
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(10px);
 }
 
 </style>
@@ -101,44 +82,54 @@ if "user" not in st.session_state:
 # ================= AUTH =================
 if st.session_state.user is None:
 
-    st.markdown("<h2 class='fade'>💼 FinSight AI</h2>", unsafe_allow_html=True)
+    st.title("💼 FinSight AI")
 
     tab1, tab2 = st.tabs(["Login", "Register"])
 
     with tab1:
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
+        username = st.text_input("Username", key="login_user")
+        password = st.text_input("Password", type="password", key="login_pass")
 
         if st.button("Login"):
             user = login_user(username, password)
             if user:
                 st.session_state.user = user
-                st.success("Welcome back ✨")
+                st.success("Login Successful 🎉")
                 st.rerun()
             else:
                 st.error("Invalid credentials")
 
     with tab2:
-        new_user = st.text_input("New Username")
-        new_pass = st.text_input("New Password", type="password")
+        new_user = st.text_input("New Username", key="reg_user")
+        new_pass = st.text_input("New Password", type="password", key="reg_pass")
 
         if st.button("Register"):
             if register_user(new_user, new_pass):
-                st.success("Account created 🎉")
+                st.success("Account created!")
             else:
-                st.error("Username exists")
+                st.error("Username already exists")
 
 # ================= MAIN =================
 else:
     user_id = st.session_state.user[0]
 
+    # 🌗 Theme Toggle
+    dark_mode = st.sidebar.toggle("🌗 Dark Mode")
+
+    if dark_mode:
+        st.markdown("""
+        <style>
+        .stApp {background: #0f172a; color: white;}
+        </style>
+        """, unsafe_allow_html=True)
+
     st.sidebar.title("Navigation")
-    menu = st.sidebar.radio("", ["Dashboard", "Add Expense", "Transactions"])
+    menu = st.sidebar.radio("Menu", ["Dashboard", "Add Expense", "Transactions"])
 
     data = get_expenses(user_id)
     df = pd.DataFrame(data, columns=["ID","User","Amount","Category","Note","Date"])
 
-    st.markdown("<h2 class='fade'>📊 Dashboard</h2>", unsafe_allow_html=True)
+    st.title("📊 Dashboard")
 
     # ================= DASHBOARD =================
     if menu == "Dashboard":
@@ -150,74 +141,64 @@ else:
 
             c1, c2 = st.columns(2)
 
-            c1.markdown(f"""
-            <div class="card fade">
-                <div class="kpi-title">Total Spending</div>
-                <div class="kpi-value">₹ {total}</div>
-            </div>
-            """, unsafe_allow_html=True)
+            c1.markdown(f'<div class="card"><div class="kpi">💰 Total Spend</div><br>₹ {total}</div>', unsafe_allow_html=True)
+            c2.markdown(f'<div class="card"><div class="kpi">📊 Avg Spend</div><br>₹ {avg:.2f}</div>', unsafe_allow_html=True)
 
-            c2.markdown(f"""
-            <div class="card fade">
-                <div class="kpi-title">Average Spending</div>
-                <div class="kpi-value">₹ {avg:.2f}</div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            # PIE
-            fig = px.pie(df, names="Category", values="Amount")
+            # Pie Chart
+            fig = px.pie(df, names="Category", values="Amount", title="Spending Distribution")
             st.plotly_chart(fig, use_container_width=True)
 
-            # TREND + PREDICTION
+            # Prediction
             daily, future = predict_future(df)
 
             if daily is not None:
-                fig2 = px.line(daily, x="Date", y="Amount")
+                fig2 = px.line(daily, x="Date", y="Amount", title="Spending Trend")
 
                 if future is not None:
                     fig2.add_scatter(
                         x=future["Date"],
                         y=future["Predicted"],
-                        mode="lines+markers",
+                        mode='lines+markers',
                         name="Prediction"
                     )
 
                 st.plotly_chart(fig2, use_container_width=True)
 
-            # INSIGHTS
-            st.subheader("🧠 Insights")
-            for insight in generate_insights(df):
-                st.markdown(f"<div class='card fade'>{insight}</div>", unsafe_allow_html=True)
+            # Insights
+            st.subheader("🧠 Smart Insights")
+            insights = generate_insights(df)
+
+            for i in insights:
+                st.info(i)
 
         else:
-            st.info("No expenses yet")
+            st.warning("No data yet")
 
     # ================= ADD =================
     elif menu == "Add Expense":
 
-        st.markdown("<h3 class='fade'>⚡ Quick Add</h3>", unsafe_allow_html=True)
+        st.subheader("⚡ Quick Add Expense")
 
         col1, col2, col3 = st.columns(3)
 
-        amount = col1.number_input("Amount", min_value=1.0)
-        category = col2.selectbox("Category", ["Food","Travel","Shopping","Bills","Other"])
-        note = col3.text_input("Note")
+        amount = col1.number_input("💰 Amount", min_value=1.0)
+        category = col2.selectbox("📂 Category", ["Food","Travel","Shopping","Bills","Other"])
+        note = col3.text_input("📝 Note")
 
         date = st.date_input("Date")
 
-        if st.button("Add Expense"):
+        if st.button("➕ Add Expense"):
             add_expense(user_id, amount, category, note, str(date))
-            st.success("Added ✨")
+            st.success("Added 🚀")
             st.rerun()
 
     # ================= TRANSACTIONS =================
     elif menu == "Transactions":
 
-        st.markdown("<h3 class='fade'>📋 Transactions</h3>", unsafe_allow_html=True)
-
+        st.subheader("📋 All Transactions")
         st.dataframe(df, use_container_width=True)
 
-        delete_id = st.number_input("Delete ID", min_value=1)
+        delete_id = st.number_input("Enter ID to Delete", min_value=1)
 
         if st.button("Delete"):
             delete_expense(delete_id)
