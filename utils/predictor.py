@@ -2,41 +2,68 @@ import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
-def predict_spending(df):
-    """
-    Predict future spending based on past transaction data.
-    Uses simple Linear Regression on time series.
-    """
+def prepare_data(df):
+    df = df.copy()
+    df["Date"] = pd.to_datetime(df["Date"])
+    df = df.sort_values("Date")
 
-    # ❌ Not enough data
+    # Daily aggregation
+    daily = df.groupby("Date")["Amount"].sum().reset_index()
+    daily["day_index"] = np.arange(len(daily))
+
+    return daily
+
+def predict_future(df, days=7):
     if df is None or len(df) < 5:
-        return None
+        return None, None
 
-    try:
-        df = df.copy()
+    daily = prepare_data(df)
 
-        # Convert Date column
-        df["Date"] = pd.to_datetime(df["Date"])
-        df = df.sort_values("Date")
+    X = daily[["day_index"]]
+    y = daily["Amount"]
 
-        # Create time index
-        df["day_index"] = np.arange(len(df))
+    model = LinearRegression()
+    model.fit(X, y)
 
-        # Features and target
-        X = df[["day_index"]]
-        y = df["Amount"]
+    # Future prediction
+    future_index = np.arange(len(daily), len(daily)+days)
+    future_index = future_index.reshape(-1,1)
 
-        # Train model
-        model = LinearRegression()
-        model.fit(X, y)
+    predictions = model.predict(future_index)
 
-        # Predict next 5 days average
-        future_days = np.array([[len(df) + i] for i in range(1, 6)])
-        predictions = model.predict(future_days)
+    future_dates = pd.date_range(
+        start=daily["Date"].max(),
+        periods=days+1
+    )[1:]
 
-        # Return average prediction
-        return round(predictions.mean(), 2)
+    future_df = pd.DataFrame({
+        "Date": future_dates,
+        "Predicted": predictions
+    })
 
-    except Exception as e:
-        print("Prediction Error:", e)
-        return None
+    return daily, future_df
+
+
+def generate_insights(df):
+    insights = []
+
+    total = df["Amount"].sum()
+    avg = df["Amount"].mean()
+
+    # Category analysis
+    cat = df.groupby("Category")["Amount"].sum()
+    top_cat = cat.idxmax()
+
+    insights.append(f"💸 You spend most on {top_cat}")
+
+    # Overspending alert
+    if avg > 500:
+        insights.append("🚨 Your average spending is high. Try reducing daily expenses.")
+
+    # Saving suggestion
+    if "Food" in cat and cat["Food"] > 0.4 * total:
+        insights.append("🍔 High food spending. Consider cooking more at home.")
+
+    insights.append("📊 Track your daily trends to improve savings.")
+
+    return insights
