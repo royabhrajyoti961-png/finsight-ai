@@ -219,7 +219,7 @@ else:
             st.rerun()
 
     # ================= TRANSACTIONS =================
-    elif menu == " $ Transactions":
+    elif menu == "  Transactions":
 
         st.markdown("<h3 class='fade'>📋 Transactions</h3>", unsafe_allow_html=True)
 
