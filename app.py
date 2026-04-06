@@ -6,7 +6,7 @@ from utils.predictor import predict_future, generate_insights
 from utils.ai_advisor import generate_ai_advice
 
 # ================= CONFIG =================
-st.set_page_config(page_title="FinSight SaaS", layout="wide")
+st.set_page_config(page_title=" $ FinSight SaaS", layout="wide")
 create_tables()
 
 # ================= THEME =================
