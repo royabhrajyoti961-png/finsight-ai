@@ -232,7 +232,7 @@ else:
     # ================= TRANSACTIONS =================
     elif menu == "₹ Transactions":
 
-        st.markdown("<h3 class='fade'>📋 Transactions</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 class='fade'>₹ Transactions</h3>", unsafe_allow_html=True)
 
         st.dataframe(df, use_container_width=True)
 
