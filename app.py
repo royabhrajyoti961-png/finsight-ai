@@ -6,29 +6,26 @@ from utils.predictor import predict_future, generate_insights
 from utils.ai_advisor import generate_ai_advice
 
 # ================= CONFIG =================
-st.set_page_config(page_title= " FinSight SaaS ", layout="wide")
+st.set_page_config(page_title="FinSight SaaS", layout="wide")
 create_tables()
 
-# ================= THEME =================
+# ================= THEME SYSTEM =================
 if "theme" not in st.session_state:
     st.session_state.theme = "light"
 
 def toggle_theme():
     st.session_state.theme = "dark" if st.session_state.theme == "light" else "light"
 
-# ================= COLORS =================
+# ================= 🍎 APPLE UI =================
 if st.session_state.theme == "light":
     bg = "linear-gradient(135deg, #f9fafb, #eef2ff, #fdf2f8)"
     card = "rgba(255,255,255,0.7)"
     text = "#111827"
-    hover = "rgba(0,0,0,0.05)"
 else:
     bg = "linear-gradient(135deg, #0f172a, #1e293b)"
     card = "rgba(30,41,59,0.7)"
     text = "#f1f5f9"
-    hover = "rgba(255,255,255,0.1)"
 
-# ================= UI =================
 st.markdown(f"""
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 
@@ -42,31 +39,7 @@ st.markdown(f"""
     color: {text};
 }}
 
-/* Sidebar */
-section[data-testid="stSidebar"] {{
-    background: {card};
-    backdrop-filter: blur(20px);
-    padding-top: 20px;
-}}
-
-/* Sidebar items */
-div[role="radiogroup"] > label {{
-    padding: 12px;
-    border-radius: 12px;
-    transition: 0.3s;
-    font-size: 15px;
-}}
-
-div[role="radiogroup"] > label:hover {{
-    background: {hover};
-}}
-
-div[role="radiogroup"] > label[data-checked="true"] {{
-    background: {hover};
-    font-weight: 600;
-}}
-
-/* Cards */
+/* Glass Card */
 .card {{
     background: {card};
     backdrop-filter: blur(20px);
@@ -92,7 +65,7 @@ div[role="radiogroup"] > label[data-checked="true"] {{
     font-weight: 600;
 }}
 
-/* Button */
+/* Buttons */
 .stButton>button {{
     border-radius: 12px;
     padding: 10px 16px;
@@ -106,7 +79,13 @@ div[role="radiogroup"] > label[data-checked="true"] {{
     transform: scale(1.05);
 }}
 
-/* Animation */
+/* Sidebar */
+section[data-testid="stSidebar"] {{
+    background: {card};
+    backdrop-filter: blur(20px);
+}}
+
+/* Fade Animation */
 .fade {{
     animation: fadeIn 0.7s ease-in-out;
 }}
@@ -126,7 +105,7 @@ if "user" not in st.session_state:
 # ================= AUTH =================
 if st.session_state.user is None:
 
-    st.markdown("<h2 class='fade'>  $ FinSight Transaction </h2>", unsafe_allow_html=True)
+    st.markdown("<h2 class='fade'>💼 FinSight SaaS</h2>", unsafe_allow_html=True)
 
     tab1, tab2 = st.tabs(["Login", "Register"])
 
@@ -158,15 +137,10 @@ else:
     user_id = st.session_state.user[0]
 
     # 🌗 Theme Toggle
-    st.sidebar.button(" Toggle Theme", on_click=toggle_theme)
+    st.sidebar.button("🌗 Toggle Theme", on_click=toggle_theme)
 
-    st.sidebar.title(" $ FinSight")
-
-    # 🔥 ICON MENU
-    menu = st.sidebar.radio(
-        "Navigation",
-        [" $ Dashboard", " $ Add Expense", " $ Transactions", "$ AI Advisor"]
-    )
+    st.sidebar.title("Navigation")
+    menu = st.sidebar.radio("", ["Dashboard", "Add Expense", "Transactions", "AI Advisor"])
 
     data = get_expenses(user_id)
     df = pd.DataFrame(data, columns=["ID","User","Amount","Category","Note","Date"])
@@ -174,7 +148,7 @@ else:
     st.markdown("<h2 class='fade'>📊 Dashboard</h2>", unsafe_allow_html=True)
 
     # ================= DASHBOARD =================
-    if menu == "$ Dashboard":
+    if menu == "Dashboard":
 
         if not df.empty:
 
@@ -197,9 +171,11 @@ else:
             </div>
             """, unsafe_allow_html=True)
 
+            # Category Chart
             fig = px.pie(df, names="Category", values="Amount")
             st.plotly_chart(fig, use_container_width=True)
 
+            # Prediction Graph
             daily, future = predict_future(df)
 
             if daily is not None:
@@ -215,15 +191,16 @@ else:
 
                 st.plotly_chart(fig2, use_container_width=True)
 
+            # Insights
             st.subheader("🧠 Insights")
-            for i in generate_insights(df):
-                st.markdown(f"<div class='card fade'>{i}</div>", unsafe_allow_html=True)
+            for insight in generate_insights(df):
+                st.markdown(f"<div class='card fade'>{insight}</div>", unsafe_allow_html=True)
 
         else:
             st.info("No expenses yet")
 
     # ================= ADD =================
-    elif menu == "$ Add Expense":
+    elif menu == "Add Expense":
 
         st.markdown("<h3 class='fade'>⚡ Quick Add</h3>", unsafe_allow_html=True)
 
@@ -237,11 +214,11 @@ else:
 
         if st.button("Add Expense"):
             add_expense(user_id, amount, category, note, str(date))
-            st.success("Added ")
+            st.success("Added ✨")
             st.rerun()
 
     # ================= TRANSACTIONS =================
-    elif menu == "$ Transactions":
+    elif menu == "Transactions":
 
         st.markdown("<h3 class='fade'>📋 Transactions</h3>", unsafe_allow_html=True)
 
@@ -254,8 +231,8 @@ else:
             st.warning("Deleted")
             st.rerun()
 
-    # ================= AI =================
-    elif menu == "$ AI Advisor":
+    # ================= AI ADVISOR =================
+    elif menu == "AI Advisor":
 
         st.markdown("<h3 class='fade'>🤖 AI Financial Advisor</h3>", unsafe_allow_html=True)
 
@@ -267,7 +244,7 @@ else:
             response = generate_ai_advice(df, question)
             st.markdown(f"<div class='card fade'>{response}</div>", unsafe_allow_html=True)
 
-        st.subheader(" $ Automatic Advice")
+        st.subheader("📊 Automatic Advice")
         auto = generate_ai_advice(df)
         st.markdown(f"<div class='card fade'>{auto}</div>", unsafe_allow_html=True)
 
