@@ -9,6 +9,5 @@ Smart Expense Tracker with AI Prediction built using Streamlit.
 - SQLite database
 
 ## Run Locally
-```bash
-pip install -r requirements.txt
-streamlit run app.py
+- Run On Streamlit App
+- Live Link ------   https://finsight-ai-fcscdsvbyrarrf35it8zz9.streamlit.app/
