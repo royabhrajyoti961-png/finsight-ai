@@ -6,9 +6,8 @@ from utils.predictor import predict_future, generate_insights
 from utils.ai_advisor import generate_ai_advice
 
 # ================= CONFIG =================
-st.set_page_config(page_title="FinSight SaaS", layout="wide"
-    page_icon=":material/keyboard_double_arrow_right:" # Ensure colons are present
-)
+st.set_page_config(page_title="FinSight SaaS", layout="wide" )
+    # Ensure colons are present
 create_tables()
 
 # ================= THEME SYSTEM =================
