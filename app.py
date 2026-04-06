@@ -2,53 +2,53 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from utils.db import *
-from utils.predictor import predict_spending
+from utils.predictor import predict_future, generate_insights
+
 # ================= CONFIG =================
-st.set_page_config(page_title="FinSight", layout="wide")
+st.set_page_config(page_title="FinSight AI", layout="wide")
 create_tables()
 
+# ================= THEME =================
+theme = st.sidebar.toggle("🌗 Dark Mode")
+
+if theme:
+    bg = "#0f172a"
+    text = "#ffffff"
+    card = "#1e293b"
+else:
+    bg = "#f8fafc"
+    text = "#1e293b"
+    card = "#ffffff"
+
 # ================= UI =================
-st.markdown("""
+st.markdown(f"""
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 
 <style>
-html, body, [class*="css"] {
+html, body, [class*="css"] {{
     font-family: 'Poppins', sans-serif;
-}
+}}
 
-/* Background */
-.stApp {
-    background: #f8fafc;
-}
+.stApp {{
+    background: {bg};
+    color: {text};
+}}
 
-/* Header */
-.header {
-    font-size: 32px;
-    font-weight: 700;
-    color: #1e293b;
-}
-
-/* Card */
-.card {
-    background: white;
+.card {{
+    background: {card};
     padding: 20px;
     border-radius: 15px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-}
+}}
 
-/* Button */
-.stButton>button {
+.stButton>button {{
     background: #2563eb;
     color: white;
     border-radius: 10px;
     padding: 10px;
     font-weight: 500;
-}
+}}
 
-/* Sidebar */
-section[data-testid="stSidebar"] {
-    background: #ffffff;
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -59,70 +59,34 @@ if "user" not in st.session_state:
 # ================= AUTH =================
 if st.session_state.user is None:
 
-    st.markdown('<div class="header">💼 FinSight Expense Manager</div>', unsafe_allow_html=True)
+    st.title("💼 FinSight AI")
 
     tab1, tab2 = st.tabs(["Login", "Register"])
 
-    # ===== LOGIN =====
     with tab1:
-        st.subheader("Login")
+        username = st.text_input("Username", key="login_user")
+        password = st.text_input("Password", type="password", key="login_pass")
 
-        login_user_input = st.text_input("Username", key="login_user")
-        login_pass_input = st.text_input("Password", type="password", key="login_pass")
-
-        if st.button("Login", key="login_btn"):
-
-            st.write("🔍 DEBUG INPUT:", login_user_input, login_pass_input)
-
-            if login_user_input and login_pass_input:
-
-                user = login_user(login_user_input, login_pass_input)
-
-                st.write("🔍 DEBUG DB RESULT:", user)
-
-                if user:
-                    st.session_state.user = user
-                    st.success("Login Successful 🎉")
-                    st.rerun()
-                else:
-                    st.error("❌ Invalid Username or Password")
+        if st.button("Login"):
+            user = login_user(username, password)
+            if user:
+                st.session_state.user = user
+                st.success("Login Successful 🎉")
+                st.rerun()
             else:
-                st.warning("⚠️ Please fill all fields")
+                st.error("Invalid credentials")
 
-    # ===== REGISTER =====
     with tab2:
-        st.subheader("Register")
+        new_user = st.text_input("New Username", key="reg_user")
+        new_pass = st.text_input("New Password", type="password", key="reg_pass")
 
-        reg_user_input = st.text_input("New Username", key="reg_user")
-        reg_pass_input = st.text_input("New Password", type="password", key="reg_pass")
-
-        if st.button("Register", key="register_btn"):
-
-            st.write("🔍 REGISTER DEBUG:", reg_user_input)
-
-            if reg_user_input and reg_pass_input:
-
-                success = register_user(reg_user_input, reg_pass_input)
-
-                if success:
-                    st.success("✅ Account created! Now login.")
-                else:
-                    st.error("❌ Username already exists")
+        if st.button("Register"):
+            if register_user(new_user, new_pass):
+                st.success("Account created!")
             else:
-                st.warning("⚠️ Please fill all fields")
+                st.error("Username already exists")
 
-    # ===== SHOW ALL USERS (DEBUG PANEL) =====
-    st.subheader("🧠 Debug: All Users in DB")
-
-    conn = connect()
-    c = conn.cursor()
-    c.execute("SELECT * FROM users")
-    users = c.fetchall()
-    conn.close()
-
-    st.write(users)
-
-# ================= APP =================
+# ================= MAIN APP =================
 else:
     user_id = st.session_state.user[0]
 
@@ -132,55 +96,83 @@ else:
     data = get_expenses(user_id)
     df = pd.DataFrame(data, columns=["ID","User","Amount","Category","Note","Date"])
 
-    st.markdown('<div class="header">📊 Dashboard</div>', unsafe_allow_html=True)
+    st.title("📊 Dashboard")
 
-    # ===== DASHBOARD =====
+    # ================= DASHBOARD =================
     if menu == "Dashboard":
+
         if not df.empty:
+
             total = df["Amount"].sum()
             avg = df["Amount"].mean()
 
             c1, c2 = st.columns(2)
+            c1.markdown(f'<div class="card">💰 Total Spend: ₹ {total}</div>', unsafe_allow_html=True)
+            c2.markdown(f'<div class="card">📊 Avg Spend: ₹ {avg:.2f}</div>', unsafe_allow_html=True)
 
-            c1.markdown(f'<div class="card">Total Spend: ₹ {total}</div>', unsafe_allow_html=True)
-            c2.markdown(f'<div class="card">Average Spend: ₹ {avg}</div>', unsafe_allow_html=True)
-
-            fig = px.pie(df, names="Category", values="Amount")
+            # PIE CHART
+            fig = px.pie(df, names="Category", values="Amount", title="Category Distribution")
             st.plotly_chart(fig, use_container_width=True)
 
-            trend = df.groupby("Date")["Amount"].sum().reset_index()
-            fig2 = px.line(trend, x="Date", y="Amount")
-            st.plotly_chart(fig2, use_container_width=True)
+            # 📈 TREND + PREDICTION
+            daily, future = predict_future(df)
+
+            if daily is not None:
+                fig2 = px.line(daily, x="Date", y="Amount", title="Spending Trend")
+
+                if future is not None:
+                    fig2.add_scatter(
+                        x=future["Date"],
+                        y=future["Predicted"],
+                        mode='lines+markers',
+                        name="Prediction"
+                    )
+
+                st.plotly_chart(fig2, use_container_width=True)
+
+            # 🧠 INSIGHTS
+            st.subheader("🧠 Smart Insights & Alerts")
+
+            insights = generate_insights(df)
+
+            for i in insights:
+                st.info(i)
+
         else:
-            st.info("No data yet. Add expenses.")
+            st.warning("No data available. Add expenses to see analytics.")
 
-    # ===== ADD =====
+    # ================= ADD =================
     elif menu == "Add Expense":
-        st.subheader("Add Expense")
 
-        amount = st.number_input("Amount", min_value=1.0)
-        category = st.selectbox("Category", ["Food","Travel","Shopping","Bills","Other"])
-        note = st.text_input("Note")
+        st.subheader("⚡ Quick Add Expense")
+
+        col1, col2, col3 = st.columns(3)
+
+        amount = col1.number_input("Amount", min_value=1.0)
+        category = col2.selectbox("Category", ["Food","Travel","Shopping","Bills","Other"])
+        note = col3.text_input("Note")
+
         date = st.date_input("Date")
 
-        if st.button("Add Expense"):
+        if st.button("➕ Add Expense"):
             add_expense(user_id, amount, category, note, str(date))
-            st.success("Expense added!")
+            st.success("Added instantly 🚀")
             st.rerun()
 
-    # ===== TRANSACTIONS =====
+    # ================= TRANSACTIONS =================
     elif menu == "Transactions":
-        st.subheader("All Transactions")
+
+        st.subheader("📋 All Transactions")
         st.dataframe(df, use_container_width=True)
 
-        delete_id = st.number_input("Delete ID", min_value=1)
+        delete_id = st.number_input("Enter ID to Delete", min_value=1)
 
         if st.button("Delete"):
             delete_expense(delete_id)
             st.warning("Deleted")
             st.rerun()
 
-    # ===== LOGOUT =====
+    # ================= LOGOUT =================
     if st.sidebar.button("Logout"):
         st.session_state.user = None
         st.rerun()
