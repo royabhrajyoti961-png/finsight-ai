@@ -1,24 +1,42 @@
 import pandas as pd
-from sklearn.linear_model import LinearRegression
 import numpy as np
+from sklearn.linear_model import LinearRegression
 
 def predict_spending(df):
-    if len(df) < 5:
+    """
+    Predict future spending based on past transaction data.
+    Uses simple Linear Regression on time series.
+    """
+
+    # ❌ Not enough data
+    if df is None or len(df) < 5:
         return None
 
-    df = df.copy()
-    df['Date'] = pd.to_datetime(df['Date'])
-    df = df.sort_values('Date')
+    try:
+        df = df.copy()
 
-    df['day'] = np.arange(len(df))
+        # Convert Date column
+        df["Date"] = pd.to_datetime(df["Date"])
+        df = df.sort_values("Date")
 
-    X = df[['day']]
-    y = df['Amount']
+        # Create time index
+        df["day_index"] = np.arange(len(df))
 
-    model = LinearRegression()
-    model.fit(X, y)
+        # Features and target
+        X = df[["day_index"]]
+        y = df["Amount"]
 
-    future = [[len(df) + 5]]
-    prediction = model.predict(future)
+        # Train model
+        model = LinearRegression()
+        model.fit(X, y)
 
-    return round(prediction[0], 2)
+        # Predict next 5 days average
+        future_days = np.array([[len(df) + i] for i in range(1, 6)])
+        predictions = model.predict(future_days)
+
+        # Return average prediction
+        return round(predictions.mean(), 2)
+
+    except Exception as e:
+        print("Prediction Error:", e)
+        return None
