@@ -6,7 +6,7 @@ from utils.predictor import predict_future, generate_insights
 from utils.ai_advisor import generate_ai_advice
 
 # ================= CONFIG =================
-st.set_page_config(page_title=" $ FinSight SaaS", layout="wide")
+st.set_page_config(page_title=" $ FinSight SaaS ", layout="wide")
 create_tables()
 
 # ================= THEME =================
@@ -126,7 +126,7 @@ if "user" not in st.session_state:
 # ================= AUTH =================
 if st.session_state.user is None:
 
-    st.markdown("<h2 class='fade'>💼 FinSight SaaS</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 class='fade'>  $ FinSight Transaction </h2>", unsafe_allow_html=True)
 
     tab1, tab2 = st.tabs(["Login", "Register"])
 
