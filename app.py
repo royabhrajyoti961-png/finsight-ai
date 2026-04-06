@@ -3,15 +3,15 @@ import pandas as pd
 import plotly.express as px
 from utils.db import *
 from utils.predictor import predict_spending
-# CONFIG
+# ================= CONFIG =================
 st.set_page_config(page_title="FinSight", layout="wide")
 create_tables()
 
-# 🎨 CORPORATE UI (POPPINS)
+# ================= UI =================
 st.markdown("""
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
-<style>
 
+<style>
 html, body, [class*="css"] {
     font-family: 'Poppins', sans-serif;
 }
@@ -49,11 +49,10 @@ html, body, [class*="css"] {
 section[data-testid="stSidebar"] {
     background: #ffffff;
 }
-
 </style>
 """, unsafe_allow_html=True)
 
-# SESSION
+# ================= SESSION =================
 if "user" not in st.session_state:
     st.session_state.user = None
 
@@ -64,34 +63,64 @@ if st.session_state.user is None:
 
     tab1, tab2 = st.tabs(["Login", "Register"])
 
-    # LOGIN
+    # ===== LOGIN =====
     with tab1:
         st.subheader("Login")
 
-        username = st.text_input("Username", key="login_user")
-        password = st.text_input("Password", type="password", key="login_pass")
+        login_user_input = st.text_input("Username", key="login_user")
+        login_pass_input = st.text_input("Password", type="password", key="login_pass")
 
-        if st.button("Login"):
-            user = login_user(username, password)
-            if user:
-                st.session_state.user = user
-                st.success("Welcome back!")
-                st.rerun()
+        if st.button("Login", key="login_btn"):
+
+            st.write("🔍 DEBUG INPUT:", login_user_input, login_pass_input)
+
+            if login_user_input and login_pass_input:
+
+                user = login_user(login_user_input, login_pass_input)
+
+                st.write("🔍 DEBUG DB RESULT:", user)
+
+                if user:
+                    st.session_state.user = user
+                    st.success("Login Successful 🎉")
+                    st.rerun()
+                else:
+                    st.error("❌ Invalid Username or Password")
             else:
-                st.error("Invalid credentials")
+                st.warning("⚠️ Please fill all fields")
 
-    # REGISTER
+    # ===== REGISTER =====
     with tab2:
         st.subheader("Register")
 
-        new_user = st.text_input("Username", key="reg_user")
-        new_pass = st.text_input("Password", type="password", key="reg_pass")
+        reg_user_input = st.text_input("New Username", key="reg_user")
+        reg_pass_input = st.text_input("New Password", type="password", key="reg_pass")
 
-        if st.button("Register"):
-            if register_user(new_user, new_pass):
-                st.success("Account created!")
+        if st.button("Register", key="register_btn"):
+
+            st.write("🔍 REGISTER DEBUG:", reg_user_input)
+
+            if reg_user_input and reg_pass_input:
+
+                success = register_user(reg_user_input, reg_pass_input)
+
+                if success:
+                    st.success("✅ Account created! Now login.")
+                else:
+                    st.error("❌ Username already exists")
             else:
-                st.error("Username already exists")
+                st.warning("⚠️ Please fill all fields")
+
+    # ===== SHOW ALL USERS (DEBUG PANEL) =====
+    st.subheader("🧠 Debug: All Users in DB")
+
+    conn = connect()
+    c = conn.cursor()
+    c.execute("SELECT * FROM users")
+    users = c.fetchall()
+    conn.close()
+
+    st.write(users)
 
 # ================= APP =================
 else:
@@ -105,7 +134,7 @@ else:
 
     st.markdown('<div class="header">📊 Dashboard</div>', unsafe_allow_html=True)
 
-    # DASHBOARD
+    # ===== DASHBOARD =====
     if menu == "Dashboard":
         if not df.empty:
             total = df["Amount"].sum()
@@ -122,8 +151,10 @@ else:
             trend = df.groupby("Date")["Amount"].sum().reset_index()
             fig2 = px.line(trend, x="Date", y="Amount")
             st.plotly_chart(fig2, use_container_width=True)
+        else:
+            st.info("No data yet. Add expenses.")
 
-    # ADD
+    # ===== ADD =====
     elif menu == "Add Expense":
         st.subheader("Add Expense")
 
@@ -137,7 +168,7 @@ else:
             st.success("Expense added!")
             st.rerun()
 
-    # VIEW
+    # ===== TRANSACTIONS =====
     elif menu == "Transactions":
         st.subheader("All Transactions")
         st.dataframe(df, use_container_width=True)
@@ -149,6 +180,7 @@ else:
             st.warning("Deleted")
             st.rerun()
 
+    # ===== LOGOUT =====
     if st.sidebar.button("Logout"):
         st.session_state.user = None
         st.rerun()
