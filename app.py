@@ -214,7 +214,7 @@ else:
     # ================= ADD =================
     elif menu == "₹ Add Expense":
 
-        st.markdown("<h3 class='fade'>₹ Quick Add Your Expanse Here </h3>", unsafe_allow_html=True)
+        st.markdown("<h3 class='fade'>₹ Quickly Add Your Expanse Here </h3>", unsafe_allow_html=True)
 
         col1, col2, col3 = st.columns(3)
 
