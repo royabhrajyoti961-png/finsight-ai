@@ -160,7 +160,7 @@ else:
     data = get_expenses(user_id)
     df = pd.DataFrame(data, columns=["ID","User","Amount","Category","Note","Date"])
 
-    st.markdown("<h2 class='fade'>📊 Dashboard</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 class='fade'>₹ Dashboard</h2>", unsafe_allow_html=True)
 
     # ================= DASHBOARD =================
     if menu == "₹ Dashboard":
@@ -214,7 +214,7 @@ else:
     # ================= ADD =================
     elif menu == "₹ Add Expense":
 
-        st.markdown("<h3 class='fade'>⚡ Quick Add</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 class='fade'>₹ Quickly Add Your Expanses Here </h3>", unsafe_allow_html=True)
 
         col1, col2, col3 = st.columns(3)
 
@@ -232,7 +232,7 @@ else:
     # ================= TRANSACTIONS =================
     elif menu == "₹ Transactions":
 
-        st.markdown("<h3 class='fade'>₹ Transactions</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 class='fade'>₹ Your Transactions & Expanses </h3>", unsafe_allow_html=True)
 
         st.dataframe(df, use_container_width=True)
 
