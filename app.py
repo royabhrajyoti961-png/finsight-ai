@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 from utils.db import *
 from utils.predictor import predict_future, generate_insights
+from utils.ai_advisor import generate_ai_advice
 
 # ================= CONFIG =================
 st.set_page_config(page_title="FinSight AI", layout="wide")
