@@ -95,6 +95,22 @@ section[data-testid="stSidebar"] {{
     to {{opacity: 1;}}
 }}
 
+/* ===== FOOTER ===== */
+.footer {{
+    position: fixed;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 13px;
+    color: #6b7280;
+    background: {card};
+    backdrop-filter: blur(12px);
+    padding: 8px 18px;
+    border-radius: 14px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    z-index: 999;
+}}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -136,7 +152,6 @@ if st.session_state.user is None:
 else:
     user_id = st.session_state.user[0]
 
-    # 🌗 Theme Toggle
     st.sidebar.button("🌗 Toggle Theme", on_click=toggle_theme)
 
     st.sidebar.title("Navigation")
@@ -171,11 +186,9 @@ else:
             </div>
             """, unsafe_allow_html=True)
 
-            # Category Chart
             fig = px.pie(df, names="Category", values="Amount")
             st.plotly_chart(fig, use_container_width=True)
 
-            # Prediction Graph
             daily, future = predict_future(df)
 
             if daily is not None:
@@ -191,7 +204,6 @@ else:
 
                 st.plotly_chart(fig2, use_container_width=True)
 
-            # Insights
             st.subheader("🧠 Insights")
             for insight in generate_insights(df):
                 st.markdown(f"<div class='card fade'>{insight}</div>", unsafe_allow_html=True)
@@ -231,14 +243,12 @@ else:
             st.warning("Deleted")
             st.rerun()
 
-    # ================= AI ADVISOR =================
+    # ================= AI =================
     elif menu == "AI Advisor":
 
         st.markdown("<h3 class='fade'>🤖 AI Financial Advisor</h3>", unsafe_allow_html=True)
 
-        st.markdown("<div class='card fade'>Ask anything about your spending 💡</div>", unsafe_allow_html=True)
-
-        question = st.text_input("💬 Ask your question")
+        question = st.text_input("Ask AI")
 
         if st.button("Ask AI"):
             response = generate_ai_advice(df, question)
@@ -248,7 +258,13 @@ else:
         auto = generate_ai_advice(df)
         st.markdown(f"<div class='card fade'>{auto}</div>", unsafe_allow_html=True)
 
-    # ================= LOGOUT =================
     if st.sidebar.button("Logout"):
         st.session_state.user = None
         st.rerun()
+
+# ================= FOOTER =================
+st.markdown("""
+<div class="footer">
+    Developed with ❤️ by <b>ABHRAJYOTI ROY</b>
+</div>
+""", unsafe_allow_html=True)
