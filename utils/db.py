@@ -7,12 +7,8 @@ def create_tables():
     conn = connect()
     c = conn.cursor()
 
-    # 🔥 Force fresh schema (IMPORTANT)
-    c.execute("DROP TABLE IF EXISTS users")
-    c.execute("DROP TABLE IF EXISTS transactions")
-
     c.execute("""
-    CREATE TABLE users (
+    CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE,
         password TEXT
@@ -20,7 +16,7 @@ def create_tables():
     """)
 
     c.execute("""
-    CREATE TABLE transactions (
+    CREATE TABLE IF NOT EXISTS transactions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER,
         amount REAL,
@@ -33,7 +29,7 @@ def create_tables():
     conn.commit()
     conn.close()
 
-def register(username, password):
+def register_user(username, password):
     conn = connect()
     c = conn.cursor()
     try:
@@ -45,25 +41,23 @@ def register(username, password):
     finally:
         conn.close()
 
-def login(username, password):
+def login_user(username, password):
     conn = connect()
     c = conn.cursor()
     c.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
-    data = c.fetchone()
+    user = c.fetchone()
     conn.close()
-    return data
+    return user
 
-def add_transaction(user_id, amount, category, note, date):
+def add_expense(user_id, amount, category, note, date):
     conn = connect()
     c = conn.cursor()
-    c.execute(
-        "INSERT INTO transactions (user_id, amount, category, note, date) VALUES (?, ?, ?, ?, ?)",
-        (user_id, amount, category, note, date)
-    )
+    c.execute("INSERT INTO transactions (user_id, amount, category, note, date) VALUES (?, ?, ?, ?, ?)",
+              (user_id, amount, category, note, date))
     conn.commit()
     conn.close()
 
-def get_transactions(user_id):
+def get_expenses(user_id):
     conn = connect()
     c = conn.cursor()
     c.execute("SELECT * FROM transactions WHERE user_id=?", (user_id,))
@@ -71,9 +65,9 @@ def get_transactions(user_id):
     conn.close()
     return data
 
-def delete_transaction(id):
+def delete_expense(expense_id):
     conn = connect()
     c = conn.cursor()
-    c.execute("DELETE FROM transactions WHERE id=?", (id,))
+    c.execute("DELETE FROM transactions WHERE id=?", (expense_id,))
     conn.commit()
     conn.close()
