@@ -121,7 +121,7 @@ if "user" not in st.session_state:
 # ================= AUTH =================
 if st.session_state.user is None:
 
-    st.markdown("<h2 class='fade'>💼 FinSight SaaS</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 class='fade'> ₹ FinSight SaaS Transaction App </h2>", unsafe_allow_html=True)
 
     tab1, tab2 = st.tabs(["Login", "Register"])
 
@@ -133,7 +133,7 @@ if st.session_state.user is None:
             user = login_user(username, password)
             if user:
                 st.session_state.user = user
-                st.success("Welcome ✨")
+                st.success("Welcome ")
                 st.rerun()
             else:
                 st.error("Invalid credentials")
@@ -144,7 +144,7 @@ if st.session_state.user is None:
 
         if st.button("Register"):
             if register_user(new_user, new_pass):
-                st.success("Account created 🎉")
+                st.success("Account created ")
             else:
                 st.error("Username exists")
 
@@ -152,10 +152,10 @@ if st.session_state.user is None:
 else:
     user_id = st.session_state.user[0]
 
-    st.sidebar.button("🌗 Toggle Theme", on_click=toggle_theme)
+    st.sidebar.button(" Toggle Theme", on_click=toggle_theme)
 
     st.sidebar.title("Navigation")
-    menu = st.sidebar.radio("", ["Dashboard", "Add Expense", "Transactions", "AI Advisor"])
+    menu = st.sidebar.radio("", ["₹ Dashboard", "₹ Add Expense", "₹ Transactions", "₹ AI Advisor"])
 
     data = get_expenses(user_id)
     df = pd.DataFrame(data, columns=["ID","User","Amount","Category","Note","Date"])
@@ -163,7 +163,7 @@ else:
     st.markdown("<h2 class='fade'>📊 Dashboard</h2>", unsafe_allow_html=True)
 
     # ================= DASHBOARD =================
-    if menu == "Dashboard":
+    if menu == "₹ Dashboard":
 
         if not df.empty:
 
@@ -204,7 +204,7 @@ else:
 
                 st.plotly_chart(fig2, use_container_width=True)
 
-            st.subheader("🧠 Insights")
+            st.subheader(" Insights")
             for insight in generate_insights(df):
                 st.markdown(f"<div class='card fade'>{insight}</div>", unsafe_allow_html=True)
 
@@ -212,7 +212,7 @@ else:
             st.info("No expenses yet")
 
     # ================= ADD =================
-    elif menu == "Add Expense":
+    elif menu == "₹ Add Expense":
 
         st.markdown("<h3 class='fade'>⚡ Quick Add</h3>", unsafe_allow_html=True)
 
@@ -224,13 +224,13 @@ else:
 
         date = st.date_input("Date")
 
-        if st.button("Add Expense"):
+        if st.button(" ₹ Add Expense"):
             add_expense(user_id, amount, category, note, str(date))
-            st.success("Added ✨")
+            st.success("Added ")
             st.rerun()
 
     # ================= TRANSACTIONS =================
-    elif menu == "Transactions":
+    elif menu == "₹ Transactions":
 
         st.markdown("<h3 class='fade'>📋 Transactions</h3>", unsafe_allow_html=True)
 
@@ -244,9 +244,9 @@ else:
             st.rerun()
 
     # ================= AI =================
-    elif menu == "AI Advisor":
+    elif menu == "₹ AI Advisor":
 
-        st.markdown("<h3 class='fade'>🤖 AI Financial Advisor</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 class='fade'> AI Financial Advisor</h3>", unsafe_allow_html=True)
 
         question = st.text_input("Ask AI")
 
@@ -254,7 +254,7 @@ else:
             response = generate_ai_advice(df, question)
             st.markdown(f"<div class='card fade'>{response}</div>", unsafe_allow_html=True)
 
-        st.subheader("📊 Automatic Advice")
+        st.subheader(" Automatic Advice")
         auto = generate_ai_advice(df)
         st.markdown(f"<div class='card fade'>{auto}</div>", unsafe_allow_html=True)
 
