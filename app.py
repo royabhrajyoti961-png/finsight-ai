@@ -6,72 +6,94 @@ from utils.predictor import predict_future, generate_insights
 from utils.ai_advisor import generate_ai_advice
 
 # ================= CONFIG =================
-st.set_page_config(page_title="FinSight AI", layout="wide")
+st.set_page_config(page_title="FinSight SaaS", layout="wide")
 create_tables()
 
-# ================= PREMIUM UI =================
-st.markdown("""
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+# ================= THEME SYSTEM =================
+if "theme" not in st.session_state:
+    st.session_state.theme = "light"
+
+def toggle_theme():
+    st.session_state.theme = "dark" if st.session_state.theme == "light" else "light"
+
+# ================= 🍎 APPLE UI =================
+if st.session_state.theme == "light":
+    bg = "linear-gradient(135deg, #f9fafb, #eef2ff, #fdf2f8)"
+    card = "rgba(255,255,255,0.7)"
+    text = "#111827"
+else:
+    bg = "linear-gradient(135deg, #0f172a, #1e293b)"
+    card = "rgba(30,41,59,0.7)"
+    text = "#f1f5f9"
+
+st.markdown(f"""
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <style>
-
-/* 🔥 Force Poppins */
-* {
+* {{
     font-family: 'Poppins', sans-serif !important;
-}
+}}
 
-/* 🌈 Animated Background */
-.stApp {
-    background: linear-gradient(135deg, #fdfbfb, #ebedee, #e0f2fe, #fce7f3);
-    background-size: 300% 300%;
-    animation: gradientMove 12s ease infinite;
-}
+.stApp {{
+    background: {bg};
+    color: {text};
+}}
 
-@keyframes gradientMove {
-    0% {background-position: 0% 50%;}
-    50% {background-position: 100% 50%;}
-    100% {background-position: 0% 50%;}
-}
-
-/* 💎 Card */
-.card {
-    background: rgba(255,255,255,0.75);
-    backdrop-filter: blur(12px);
+/* Glass Card */
+.card {{
+    background: {card};
+    backdrop-filter: blur(20px);
     padding: 25px;
-    border-radius: 18px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    margin-bottom: 15px;
     transition: 0.3s;
-}
+}}
 
-.card:hover {
-    transform: translateY(-5px);
-}
+.card:hover {{
+    transform: translateY(-6px);
+}}
 
 /* KPI */
-.kpi {
-    font-size: 20px;
+.kpi-title {{
+    font-size: 14px;
+    opacity: 0.7;
+}}
+
+.kpi-value {{
+    font-size: 26px;
     font-weight: 600;
-}
+}}
 
-/* 🚀 Button */
-.stButton>button {
-    background: linear-gradient(135deg, #6366f1, #3b82f6, #06b6d4);
-    color: white;
+/* Buttons */
+.stButton>button {{
     border-radius: 12px;
-    padding: 10px;
-    font-weight: 500;
+    padding: 10px 16px;
     border: none;
-}
+    background: {"#111827" if st.session_state.theme=="light" else "#e2e8f0"};
+    color: {"white" if st.session_state.theme=="light" else "#111827"};
+    transition: 0.3s;
+}}
 
-.stButton>button:hover {
+.stButton>button:hover {{
     transform: scale(1.05);
-}
+}}
 
 /* Sidebar */
-section[data-testid="stSidebar"] {
-    background: rgba(255,255,255,0.85);
-    backdrop-filter: blur(10px);
-}
+section[data-testid="stSidebar"] {{
+    background: {card};
+    backdrop-filter: blur(20px);
+}}
+
+/* Fade Animation */
+.fade {{
+    animation: fadeIn 0.7s ease-in-out;
+}}
+
+@keyframes fadeIn {{
+    from {{opacity: 0;}}
+    to {{opacity: 1;}}
+}}
 
 </style>
 """, unsafe_allow_html=True)
@@ -83,46 +105,39 @@ if "user" not in st.session_state:
 # ================= AUTH =================
 if st.session_state.user is None:
 
-    st.title("💼 FinSight AI")
+    st.markdown("<h2 class='fade'>💼 FinSight SaaS</h2>", unsafe_allow_html=True)
 
     tab1, tab2 = st.tabs(["Login", "Register"])
 
     with tab1:
-        username = st.text_input("Username", key="login_user")
-        password = st.text_input("Password", type="password", key="login_pass")
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
 
         if st.button("Login"):
             user = login_user(username, password)
             if user:
                 st.session_state.user = user
-                st.success("Login Successful 🎉")
+                st.success("Welcome ✨")
                 st.rerun()
             else:
                 st.error("Invalid credentials")
 
     with tab2:
-        new_user = st.text_input("New Username", key="reg_user")
-        new_pass = st.text_input("New Password", type="password", key="reg_pass")
+        new_user = st.text_input("New Username")
+        new_pass = st.text_input("New Password", type="password")
 
         if st.button("Register"):
             if register_user(new_user, new_pass):
-                st.success("Account created!")
+                st.success("Account created 🎉")
             else:
-                st.error("Username already exists")
+                st.error("Username exists")
 
 # ================= MAIN =================
 else:
     user_id = st.session_state.user[0]
 
     # 🌗 Theme Toggle
-    dark_mode = st.sidebar.toggle("🌗 Dark Mode")
-
-    if dark_mode:
-        st.markdown("""
-        <style>
-        .stApp {background: #0f172a; color: white;}
-        </style>
-        """, unsafe_allow_html=True)
+    st.sidebar.button("🌗 Toggle Theme", on_click=toggle_theme)
 
     st.sidebar.title("Navigation")
     menu = st.sidebar.radio("", ["Dashboard", "Add Expense", "Transactions", "AI Advisor"])
@@ -130,7 +145,7 @@ else:
     data = get_expenses(user_id)
     df = pd.DataFrame(data, columns=["ID","User","Amount","Category","Note","Date"])
 
-    st.title("📊 Dashboard")
+    st.markdown("<h2 class='fade'>📊 Dashboard</h2>", unsafe_allow_html=True)
 
     # ================= DASHBOARD =================
     if menu == "Dashboard":
@@ -142,69 +157,96 @@ else:
 
             c1, c2 = st.columns(2)
 
-            c1.markdown(f'<div class="card"><div class="kpi">💰 Total Spend</div><br>₹ {total}</div>', unsafe_allow_html=True)
-            c2.markdown(f'<div class="card"><div class="kpi">📊 Avg Spend</div><br>₹ {avg:.2f}</div>', unsafe_allow_html=True)
+            c1.markdown(f"""
+            <div class="card fade">
+                <div class="kpi-title">Total Spending</div>
+                <div class="kpi-value">₹ {total}</div>
+            </div>
+            """, unsafe_allow_html=True)
 
-            # Pie Chart
-            fig = px.pie(df, names="Category", values="Amount", title="Spending Distribution")
+            c2.markdown(f"""
+            <div class="card fade">
+                <div class="kpi-title">Average Spending</div>
+                <div class="kpi-value">₹ {avg:.2f}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Category Chart
+            fig = px.pie(df, names="Category", values="Amount")
             st.plotly_chart(fig, use_container_width=True)
 
-            # Prediction
+            # Prediction Graph
             daily, future = predict_future(df)
 
             if daily is not None:
-                fig2 = px.line(daily, x="Date", y="Amount", title="Spending Trend")
+                fig2 = px.line(daily, x="Date", y="Amount")
 
                 if future is not None:
                     fig2.add_scatter(
                         x=future["Date"],
                         y=future["Predicted"],
-                        mode='lines+markers',
+                        mode="lines+markers",
                         name="Prediction"
                     )
 
                 st.plotly_chart(fig2, use_container_width=True)
 
             # Insights
-            st.subheader("🧠 Smart Insights")
-            insights = generate_insights(df)
-
-            for i in insights:
-                st.info(i)
+            st.subheader("🧠 Insights")
+            for insight in generate_insights(df):
+                st.markdown(f"<div class='card fade'>{insight}</div>", unsafe_allow_html=True)
 
         else:
-            st.warning("No data yet")
+            st.info("No expenses yet")
 
     # ================= ADD =================
     elif menu == "Add Expense":
 
-        st.subheader("⚡ Quick Add Expense")
+        st.markdown("<h3 class='fade'>⚡ Quick Add</h3>", unsafe_allow_html=True)
 
         col1, col2, col3 = st.columns(3)
 
-        amount = col1.number_input("💰 Amount", min_value=1.0)
-        category = col2.selectbox("📂 Category", ["Food","Travel","Shopping","Bills","Other"])
-        note = col3.text_input("📝 Note")
+        amount = col1.number_input("Amount", min_value=1.0)
+        category = col2.selectbox("Category", ["Food","Travel","Shopping","Bills","Other"])
+        note = col3.text_input("Note")
 
         date = st.date_input("Date")
 
-        if st.button("➕ Add Expense"):
+        if st.button("Add Expense"):
             add_expense(user_id, amount, category, note, str(date))
-            st.success("Added 🚀")
+            st.success("Added ✨")
             st.rerun()
 
     # ================= TRANSACTIONS =================
     elif menu == "Transactions":
 
-        st.subheader("📋 All Transactions")
+        st.markdown("<h3 class='fade'>📋 Transactions</h3>", unsafe_allow_html=True)
+
         st.dataframe(df, use_container_width=True)
 
-        delete_id = st.number_input("Enter ID to Delete", min_value=1)
+        delete_id = st.number_input("Delete ID", min_value=1)
 
         if st.button("Delete"):
             delete_expense(delete_id)
             st.warning("Deleted")
             st.rerun()
+
+    # ================= AI ADVISOR =================
+    elif menu == "AI Advisor":
+
+        st.markdown("<h3 class='fade'>🤖 AI Financial Advisor</h3>", unsafe_allow_html=True)
+
+        st.markdown("<div class='card fade'>Ask anything about your spending 💡</div>", unsafe_allow_html=True)
+
+        question = st.text_input("💬 Ask your question")
+
+        if st.button("Ask AI"):
+            response = generate_ai_advice(df, question)
+            st.markdown(f"<div class='card fade'>{response}</div>", unsafe_allow_html=True)
+
+        st.subheader("📊 Automatic Advice")
+        auto = generate_ai_advice(df)
+        st.markdown(f"<div class='card fade'>{auto}</div>", unsafe_allow_html=True)
 
     # ================= LOGOUT =================
     if st.sidebar.button("Logout"):
