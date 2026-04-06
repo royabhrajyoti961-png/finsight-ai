@@ -125,7 +125,7 @@ else:
         """, unsafe_allow_html=True)
 
     st.sidebar.title("Navigation")
-    menu = st.sidebar.radio("Menu", ["Dashboard", "Add Expense", "Transactions"])
+    menu = st.sidebar.radio("", ["Dashboard", "Add Expense", "Transactions", "AI Advisor"])
 
     data = get_expenses(user_id)
     df = pd.DataFrame(data, columns=["ID","User","Amount","Category","Note","Date"])
