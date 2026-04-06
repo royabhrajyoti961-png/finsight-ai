@@ -3,45 +3,53 @@ import pandas as pd
 import plotly.express as px
 from utils.db import *
 from utils.predictor import predict_spending
-
-st.set_page_config(page_title="FinSight AI", layout="wide")
+# CONFIG
+st.set_page_config(page_title="FinSight", layout="wide")
 create_tables()
 
-# 🌈 UI
+# 🎨 CORPORATE UI (POPPINS)
 st.markdown("""
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 <style>
+
+html, body, [class*="css"] {
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Background */
 .stApp {
-    background: linear-gradient(135deg, #fef9c3, #dbeafe, #fbcfe8, #dcfce7);
-    background-size: 400% 400%;
-    animation: bg 10s ease infinite;
+    background: #f8fafc;
 }
-@keyframes bg {
-    0% {background-position:0%}
-    50% {background-position:100%}
-    100% {background-position:0%}
+
+/* Header */
+.header {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1e293b;
 }
+
+/* Card */
 .card {
-    background: rgba(255,255,255,0.8);
+    background: white;
     padding: 20px;
-    border-radius: 20px;
-}
-.kpi {
-    background: rgba(255,255,255,0.7);
-    padding: 15px;
     border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
 }
+
+/* Button */
 .stButton>button {
-    background: linear-gradient(270deg,#3b82f6,#22c55e,#a855f7,#ec4899);
-    background-size:600% 600%;
-    animation: btn 6s ease infinite;
-    color:white;
-    border-radius:12px;
+    background: #2563eb;
+    color: white;
+    border-radius: 10px;
+    padding: 10px;
+    font-weight: 500;
 }
-@keyframes btn {
-    0%{background-position:0%}
-    50%{background-position:100%}
-    100%{background-position:0%}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background: #ffffff;
 }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -49,42 +57,53 @@ st.markdown("""
 if "user" not in st.session_state:
     st.session_state.user = None
 
-# ================= LOGIN =================
+# ================= AUTH =================
 if st.session_state.user is None:
-    st.title("🔐 FinSight AI Login")
 
-    col1,col2 = st.columns(2)
+    st.markdown('<div class="header">💼 FinSight Expense Manager</div>', unsafe_allow_html=True)
 
-    with col1:
+    tab1, tab2 = st.tabs(["Login", "Register"])
+
+    # LOGIN
+    with tab1:
         st.subheader("Login")
-        u = st.text_input("Username")
-        p = st.text_input("Password", type="password")
+
+        username = st.text_input("Username", key="login_user")
+        password = st.text_input("Password", type="password", key="login_pass")
+
         if st.button("Login"):
-            user = login(u,p)
+            user = login_user(username, password)
             if user:
                 st.session_state.user = user
+                st.success("Welcome back!")
                 st.rerun()
             else:
-                st.error("Invalid")
+                st.error("Invalid credentials")
 
-    with col2:
+    # REGISTER
+    with tab2:
         st.subheader("Register")
-        ru = st.text_input("New Username")
-        rp = st.text_input("New Password", type="password")
+
+        new_user = st.text_input("Username", key="reg_user")
+        new_pass = st.text_input("Password", type="password", key="reg_pass")
+
         if st.button("Register"):
-            if register(ru,rp):
-                st.success("Registered!")
+            if register_user(new_user, new_pass):
+                st.success("Account created!")
             else:
-                st.warning("User exists")
+                st.error("Username already exists")
 
 # ================= APP =================
 else:
     user_id = st.session_state.user[0]
 
-    menu = st.sidebar.radio("Menu", ["Dashboard","Add","Transactions"])
+    st.sidebar.title("Navigation")
+    menu = st.sidebar.radio("Menu", ["Dashboard", "Add Expense", "Transactions"])
 
-    data = get_transactions(user_id)
+    data = get_expenses(user_id)
     df = pd.DataFrame(data, columns=["ID","User","Amount","Category","Note","Date"])
+
+    st.markdown('<div class="header">📊 Dashboard</div>', unsafe_allow_html=True)
 
     # DASHBOARD
     if menu == "Dashboard":
@@ -92,43 +111,44 @@ else:
             total = df["Amount"].sum()
             avg = df["Amount"].mean()
 
-            c1,c2 = st.columns(2)
-            c1.markdown(f'<div class="kpi">Total ₹ {total}</div>', unsafe_allow_html=True)
-            c2.markdown(f'<div class="kpi">Avg ₹ {avg}</div>', unsafe_allow_html=True)
+            c1, c2 = st.columns(2)
+
+            c1.markdown(f'<div class="card">Total Spend: ₹ {total}</div>', unsafe_allow_html=True)
+            c2.markdown(f'<div class="card">Average Spend: ₹ {avg}</div>', unsafe_allow_html=True)
 
             fig = px.pie(df, names="Category", values="Amount")
-            st.plotly_chart(fig)
+            st.plotly_chart(fig, use_container_width=True)
 
             trend = df.groupby("Date")["Amount"].sum().reset_index()
             fig2 = px.line(trend, x="Date", y="Amount")
-            st.plotly_chart(fig2)
-
-            pred = predict_spending(df)
-            if pred:
-                st.markdown(f'<div class="card">Predicted ₹ {pred}</div>', unsafe_allow_html=True)
+            st.plotly_chart(fig2, use_container_width=True)
 
     # ADD
-    elif menu == "Add":
-        amt = st.number_input("Amount", min_value=1.0)
-        cat = st.selectbox("Category", ["Food","Travel","Shopping","Bills","Other"])
+    elif menu == "Add Expense":
+        st.subheader("Add Expense")
+
+        amount = st.number_input("Amount", min_value=1.0)
+        category = st.selectbox("Category", ["Food","Travel","Shopping","Bills","Other"])
         note = st.text_input("Note")
         date = st.date_input("Date")
 
-        if st.button("Add"):
-            add_transaction(user_id, amt, cat, note, str(date))
-            st.success("Added")
+        if st.button("Add Expense"):
+            add_expense(user_id, amount, category, note, str(date))
+            st.success("Expense added!")
             st.rerun()
 
     # VIEW
     elif menu == "Transactions":
-        st.dataframe(df)
+        st.subheader("All Transactions")
+        st.dataframe(df, use_container_width=True)
 
-        did = st.number_input("Delete ID", min_value=1)
+        delete_id = st.number_input("Delete ID", min_value=1)
+
         if st.button("Delete"):
-            delete_transaction(did)
+            delete_expense(delete_id)
             st.warning("Deleted")
             st.rerun()
 
-    if st.button("Logout"):
+    if st.sidebar.button("Logout"):
         st.session_state.user = None
         st.rerun()
