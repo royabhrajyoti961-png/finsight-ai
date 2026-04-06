@@ -8,46 +8,69 @@ from utils.predictor import predict_future, generate_insights
 st.set_page_config(page_title="FinSight AI", layout="wide")
 create_tables()
 
-# ================= THEME =================
-theme = st.sidebar.toggle("🌗 Dark Mode")
-
-if theme:
-    bg = "#0f172a"
-    text = "#ffffff"
-    card = "#1e293b"
-else:
-    bg = "#f8fafc"
-    text = "#1e293b"
-    card = "#ffffff"
-
-# ================= UI =================
-st.markdown(f"""
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+# ================= PREMIUM UI =================
+st.markdown("""
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
-html, body, [class*="css"] {{
-    font-family: 'Poppins', sans-serif;
-}}
 
-.stApp {{
-    background: {bg};
-    color: {text};
-}}
+/* 🔥 Force Poppins */
+* {
+    font-family: 'Poppins', sans-serif !important;
+}
 
-.card {{
-    background: {card};
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-}}
+/* 🌈 Animated Background */
+.stApp {
+    background: linear-gradient(135deg, #fdfbfb, #ebedee, #e0f2fe, #fce7f3);
+    background-size: 300% 300%;
+    animation: gradientMove 12s ease infinite;
+}
 
-.stButton>button {{
-    background: #2563eb;
+@keyframes gradientMove {
+    0% {background-position: 0% 50%;}
+    50% {background-position: 100% 50%;}
+    100% {background-position: 0% 50%;}
+}
+
+/* 💎 Card */
+.card {
+    background: rgba(255,255,255,0.75);
+    backdrop-filter: blur(12px);
+    padding: 25px;
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+/* KPI */
+.kpi {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+/* 🚀 Button */
+.stButton>button {
+    background: linear-gradient(135deg, #6366f1, #3b82f6, #06b6d4);
     color: white;
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 10px;
     font-weight: 500;
-}}
+    border: none;
+}
+
+.stButton>button:hover {
+    transform: scale(1.05);
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(10px);
+}
 
 </style>
 """, unsafe_allow_html=True)
@@ -86,9 +109,19 @@ if st.session_state.user is None:
             else:
                 st.error("Username already exists")
 
-# ================= MAIN APP =================
+# ================= MAIN =================
 else:
     user_id = st.session_state.user[0]
+
+    # 🌗 Theme Toggle
+    dark_mode = st.sidebar.toggle("🌗 Dark Mode")
+
+    if dark_mode:
+        st.markdown("""
+        <style>
+        .stApp {background: #0f172a; color: white;}
+        </style>
+        """, unsafe_allow_html=True)
 
     st.sidebar.title("Navigation")
     menu = st.sidebar.radio("Menu", ["Dashboard", "Add Expense", "Transactions"])
@@ -107,14 +140,15 @@ else:
             avg = df["Amount"].mean()
 
             c1, c2 = st.columns(2)
-            c1.markdown(f'<div class="card">💰 Total Spend: ₹ {total}</div>', unsafe_allow_html=True)
-            c2.markdown(f'<div class="card">📊 Avg Spend: ₹ {avg:.2f}</div>', unsafe_allow_html=True)
 
-            # PIE CHART
-            fig = px.pie(df, names="Category", values="Amount", title="Category Distribution")
+            c1.markdown(f'<div class="card"><div class="kpi">💰 Total Spend</div><br>₹ {total}</div>', unsafe_allow_html=True)
+            c2.markdown(f'<div class="card"><div class="kpi">📊 Avg Spend</div><br>₹ {avg:.2f}</div>', unsafe_allow_html=True)
+
+            # Pie Chart
+            fig = px.pie(df, names="Category", values="Amount", title="Spending Distribution")
             st.plotly_chart(fig, use_container_width=True)
 
-            # 📈 TREND + PREDICTION
+            # Prediction
             daily, future = predict_future(df)
 
             if daily is not None:
@@ -130,16 +164,15 @@ else:
 
                 st.plotly_chart(fig2, use_container_width=True)
 
-            # 🧠 INSIGHTS
-            st.subheader("🧠 Smart Insights & Alerts")
-
+            # Insights
+            st.subheader("🧠 Smart Insights")
             insights = generate_insights(df)
 
             for i in insights:
                 st.info(i)
 
         else:
-            st.warning("No data available. Add expenses to see analytics.")
+            st.warning("No data yet")
 
     # ================= ADD =================
     elif menu == "Add Expense":
@@ -148,15 +181,15 @@ else:
 
         col1, col2, col3 = st.columns(3)
 
-        amount = col1.number_input("Amount", min_value=1.0)
-        category = col2.selectbox("Category", ["Food","Travel","Shopping","Bills","Other"])
-        note = col3.text_input("Note")
+        amount = col1.number_input("💰 Amount", min_value=1.0)
+        category = col2.selectbox("📂 Category", ["Food","Travel","Shopping","Bills","Other"])
+        note = col3.text_input("📝 Note")
 
         date = st.date_input("Date")
 
         if st.button("➕ Add Expense"):
             add_expense(user_id, amount, category, note, str(date))
-            st.success("Added instantly 🚀")
+            st.success("Added 🚀")
             st.rerun()
 
     # ================= TRANSACTIONS =================
