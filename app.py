@@ -158,14 +158,14 @@ else:
     user_id = st.session_state.user[0]
 
     # 🌗 Theme Toggle
-    st.sidebar.button("🌗 Toggle Theme", on_click=toggle_theme)
+    st.sidebar.button(" Toggle Theme", on_click=toggle_theme)
 
-    st.sidebar.title("💼 FinSight")
+    st.sidebar.title(" $ FinSight")
 
     # 🔥 ICON MENU
     menu = st.sidebar.radio(
         "Navigation",
-        ["📊 Dashboard", "➕ Add Expense", "📋 Transactions", "🤖 AI Advisor"]
+        [" $ Dashboard", " $ Add Expense", " $ Transactions", "$ AI Advisor"]
     )
 
     data = get_expenses(user_id)
@@ -174,7 +174,7 @@ else:
     st.markdown("<h2 class='fade'>📊 Dashboard</h2>", unsafe_allow_html=True)
 
     # ================= DASHBOARD =================
-    if menu == "📊 Dashboard":
+    if menu == "$ Dashboard":
 
         if not df.empty:
 
@@ -223,7 +223,7 @@ else:
             st.info("No expenses yet")
 
     # ================= ADD =================
-    elif menu == "➕ Add Expense":
+    elif menu == "$ Add Expense":
 
         st.markdown("<h3 class='fade'>⚡ Quick Add</h3>", unsafe_allow_html=True)
 
@@ -237,11 +237,11 @@ else:
 
         if st.button("Add Expense"):
             add_expense(user_id, amount, category, note, str(date))
-            st.success("Added ✨")
+            st.success("Added ")
             st.rerun()
 
     # ================= TRANSACTIONS =================
-    elif menu == "📋 Transactions":
+    elif menu == "$ Transactions":
 
         st.markdown("<h3 class='fade'>📋 Transactions</h3>", unsafe_allow_html=True)
 
@@ -255,7 +255,7 @@ else:
             st.rerun()
 
     # ================= AI =================
-    elif menu == "🤖 AI Advisor":
+    elif menu == "$ AI Advisor":
 
         st.markdown("<h3 class='fade'>🤖 AI Financial Advisor</h3>", unsafe_allow_html=True)
 
@@ -267,7 +267,7 @@ else:
             response = generate_ai_advice(df, question)
             st.markdown(f"<div class='card fade'>{response}</div>", unsafe_allow_html=True)
 
-        st.subheader("📊 Automatic Advice")
+        st.subheader(" $ Automatic Advice")
         auto = generate_ai_advice(df)
         st.markdown(f"<div class='card fade'>{auto}</div>", unsafe_allow_html=True)
 
